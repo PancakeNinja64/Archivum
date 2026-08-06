@@ -1,0 +1,27 @@
+# Dependencies
+site/node_modules/
+
+# Next.js build output
+site/.next/
+site/out/
+out/
+
+# TypeScript
+site/tsconfig.tsbuildinfo
+site/next-env.d.ts
+
+# Environment
+.env*
+!.env.example
+
+# OS / editor
+.DS_Store
+Thumbs.db
+
+# Vercel
+.vercel
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
