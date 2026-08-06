@@ -15,7 +15,6 @@ Version datasets. Trace lineage. Verify provenance.
 ## Develop
 
 ```bash
-cd site
 npm install
 npm run dev
 ```
@@ -25,10 +24,8 @@ Open [http://localhost:3000](http://localhost:3000).
 ## Production
 
 ```bash
-cd site
 npm run build
+npm start
 ```
 
-The static export is written to `site/out/` when you run `npm run build`. See `DEPLOY-README.md` for deployment options.
-
-© Archivum LLC
+© Aureliun LLC
