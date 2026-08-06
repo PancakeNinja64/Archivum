@@ -29,6 +29,6 @@ cd site
 npm run build
 ```
 
-The static export is written to `site/out/`. See `DEPLOY-README.md` for deployment options.
+The static export lives in `out/` (pre-built) and is regenerated to `site/out/` when you run `npm run build` inside `site/`. See `DEPLOY-README.md` for deployment options.
 
 © Aureliun LLC

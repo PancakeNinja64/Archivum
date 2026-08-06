@@ -4,7 +4,6 @@ site/node_modules/
 # Next.js build output
 site/.next/
 site/out/
-out/
 
 # TypeScript
 site/tsconfig.tsbuildinfo
