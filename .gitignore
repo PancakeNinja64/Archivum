@@ -9,9 +9,13 @@ site/out/
 site/tsconfig.tsbuildinfo
 site/next-env.d.ts
 
-# Environment
-.env*
-!.env.example
+# Environment — never commit secrets
+.env
+.env.local
+.env.*.local
+site/.env
+site/.env.local
+!site/.env.example
 
 # OS / editor
 .DS_Store
