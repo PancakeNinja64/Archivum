@@ -7,7 +7,7 @@ Everything here is browser-only. No terminal is required at any step.
 - **Supabase** holds the catalog: datasets, versions, coverage snapshots,
   saved datasets, change log, ingestion runs, corrections. The schema is
   `supabase/migrations/001_init.sql` and is already applied.
-- **The Next.js app** (in `site/`) reads the catalog directly from the browser
+- **The Next.js app** (at the repo root) reads the catalog directly from the browser
   with the anon key; Row Level Security limits reads to published datasets and
   each user's own rows. Privileged work — importing, publishing, the daily
   re-check — runs in API routes that use the service-role key, which never
@@ -18,7 +18,7 @@ Everything here is browser-only. No terminal is required at any step.
 
 ## 2. Environment variables
 
-Copy `site/.env.example` to `site/.env.local` for local work, and add the same
+Copy `.env.example` to `.env.local` for local work, and add the same
 nine variables in Vercel → Project → Settings → Environment Variables.
 
 | Variable | Where to find it |
@@ -35,8 +35,8 @@ nine variables in Vercel → Project → Settings → Environment Variables.
 
 ## 3. Deploy checklist (Vercel)
 
-1. Import the GitHub repo. **Set Root Directory to `site`** — without this the
-   build fails immediately.
+1. Import the GitHub repo. Leave **Root Directory blank** (repo root) — the
+   app, `package.json`, and `next.config.ts` all live at the top level.
 2. Add all nine environment variables with `NEXT_PUBLIC_DATA_SOURCE=mock`.
 3. Deploy. Verify the demo site works at the deployment URL.
 4. In Supabase → Authentication → Providers → Email: turn **off** "Confirm
@@ -65,7 +65,7 @@ retrieved (a licence field, a file list), half a point when the publisher
 stated it in prose, 0 when absent, and checks that cannot apply on a platform
 are excluded from the denominator. Four sections — origin, licensing,
 composition, maintenance — weighted equally. The arithmetic lives in
-`site/src/lib/coverage/rules.ts` and nowhere else; the importer, the site, and
+`src/lib/coverage/rules.ts` and nowhere else; the importer, the site, and
 the docs page all call the same function.
 
 It is a measure of the record, never a grade of the dataset, and the site's
