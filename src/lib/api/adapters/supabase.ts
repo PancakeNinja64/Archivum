@@ -185,62 +185,21 @@ export async function getRelated(slug: string): Promise<DatasetSummary[]> {
   return ((data ?? []) as unknown as Row[]).map(rowSummary);
 }
 
+/**
+ * Watchlist / activity go through API routes so the service role can read
+ * saved_datasets even when the authenticated role is missing SELECT grants.
+ * Browser-only: these are called from DashboardClient.
+ */
 export async function getActivity(): Promise<ActivityEvent[]> {
-  const client = sb();
-  const { data: auth } = await client.auth.getUser();
-  if (!auth?.user) return [];
-  const { data: saved } = await client.from('saved_datasets').select('dataset_id').eq('user_id', auth.user.id);
-  const ids = (saved ?? []).map((r) => r.dataset_id as string);
-  if (!ids.length) return [];
-  const { data } = await client.from('dataset_changes')
-    .select('id, dataset_id, change_type, severity, message, detected_at, datasets!inner(slug, name)')
-    .in('dataset_id', ids).order('detected_at', { ascending: false }).limit(30);
-  return ((data ?? []) as unknown as Row[]).map((r) => {
-    const ds = r.datasets as { slug?: string; name?: string } | null;
-    return {
-      id: s(r.id),
-      type: s(r.change_type, 'lineage-updated') as ActivityEvent['type'],
-      severity: s(r.severity, 'info') as ActivityEvent['severity'],
-      datasetSlug: s(ds?.slug),
-      datasetName: s(ds?.name),
-      message: s(r.message),
-      timestamp: s(r.detected_at),
-    };
-  });
+  if (typeof window === 'undefined') return [];
+  const res = await fetch('/api/activity', { credentials: 'same-origin' });
+  if (res.status === 401 || !res.ok) return [];
+  return (await res.json()) as ActivityEvent[];
 }
 
 export async function getWatchlist(): Promise<WatchedDataset[]> {
-  const client = sb();
-  const { data: auth } = await client.auth.getUser();
-  if (!auth?.user) return [];
-  const { data: saved } = await client.from('saved_datasets')
-    .select('dataset_id, datasets!inner(id, slug, name, publisher, coverage_total, coverage_checked_at, license_status)')
-    .eq('user_id', auth.user.id);
-  const rows = (saved ?? []) as unknown as Row[];
-  if (!rows.length) return [];
-  const ids = rows.map((r) => r.dataset_id as string);
-  const { data: snaps } = await client.from('coverage_snapshots')
-    .select('dataset_id, coverage_total, observed_at')
-    .in('dataset_id', ids).order('observed_at', { ascending: false }).limit(12 * ids.length);
-  const history = new Map<string, number[]>();
-  for (const snap of (snaps ?? [])) {
-    const key = snap.dataset_id as string;
-    const arr = history.get(key) ?? [];
-    if (arr.length < 12) { arr.push(snap.coverage_total as number); history.set(key, arr); }
-  }
-  return rows.map((r) => {
-    const d = r.datasets as Row;
-    const hist = (history.get(r.dataset_id as string) ?? [n(d.coverage_total)]).slice().reverse();
-    const delta = hist.length >= 2 ? hist[hist.length - 1] - hist[hist.length - 2] : 0;
-    return {
-      slug: s(d.slug),
-      name: s(d.name),
-      publisher: s(d.publisher),
-      coverageTotal: n(d.coverage_total),
-      coverageDelta: delta,
-      licenseStatus: (s(d.license_status) === 'not_found' ? 'unresolved' : 'ok') as WatchedDataset['licenseStatus'],
-      lastChecked: s(d.coverage_checked_at, new Date().toISOString()),
-      coverageHistory: hist,
-    };
-  });
+  if (typeof window === 'undefined') return [];
+  const res = await fetch('/api/watchlist', { credentials: 'same-origin' });
+  if (res.status === 401 || !res.ok) return [];
+  return (await res.json()) as WatchedDataset[];
 }

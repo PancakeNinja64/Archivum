@@ -12,7 +12,8 @@ grant select on public.coverage_snapshots to anon, authenticated;
 grant select on public.dataset_changes to anon, authenticated;
 grant select on public.catalog_facets to anon, authenticated;
 
-grant insert, update, delete on public.saved_datasets to authenticated;
+-- SELECT is required to read the watchlist / saved state; INSERT alone is not enough.
+grant select, insert, update, delete on public.saved_datasets to authenticated;
 grant insert on public.dataset_corrections to anon, authenticated;
 
 grant all on all tables in schema public to service_role;

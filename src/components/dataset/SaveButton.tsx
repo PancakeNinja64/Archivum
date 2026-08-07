@@ -2,32 +2,51 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { supabaseBrowser } from "@/lib/supabase/browser";
-import { SAVED_DATASET_LIMIT } from "@/lib/config";
 
 const live = process.env.NEXT_PUBLIC_DATA_SOURCE === "supabase";
 
-/** Save / unsave a dataset. RLS restricts rows to the signed-in user. */
+async function readError(res: Response, fallback: string): Promise<string> {
+  try {
+    const body = (await res.json()) as { error?: string };
+    if (body?.error) return body.error;
+  } catch {
+    /* ignore */
+  }
+  return fallback;
+}
+
+/** Save / unsave a dataset via /api/saved (session-scoped; service role on the server). */
 export function SaveButton({ datasetSlug }: { datasetSlug: string }) {
   const [saved, setSaved] = useState<boolean | null>(null);
-  const [userId, setUserId] = useState<string | null>(null);
-  const [datasetId, setDatasetId] = useState<string | null>(null);
+  const [signedIn, setSignedIn] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     if (!live) return;
-    const sb = supabaseBrowser();
+    let cancelled = false;
     (async () => {
-      const { data: auth } = await sb.auth.getUser();
-      if (!auth?.user) { setSaved(false); return; }
-      setUserId(auth.user.id);
-      const { data: d } = await sb.from("datasets").select("id").eq("slug", datasetSlug).maybeSingle();
-      if (!d) { setSaved(false); return; }
-      setDatasetId(d.id);
-      const { data: row } = await sb.from("saved_datasets")
-        .select("dataset_id").eq("user_id", auth.user.id).eq("dataset_id", d.id).maybeSingle();
-      setSaved(Boolean(row));
+      const res = await fetch(`/api/saved?slug=${encodeURIComponent(datasetSlug)}`, {
+        credentials: "same-origin",
+      });
+      if (cancelled) return;
+      if (res.status === 401) {
+        setSignedIn(false);
+        setSaved(false);
+        return;
+      }
+      if (!res.ok) {
+        setNotice(await readError(res, "Could not check whether this dataset is saved."));
+        setSaved(false);
+        return;
+      }
+      const body = (await res.json()) as { saved: boolean };
+      setSignedIn(true);
+      setSaved(Boolean(body.saved));
     })();
+    return () => {
+      cancelled = true;
+    };
   }, [datasetSlug]);
 
   if (!live) {
@@ -39,32 +58,51 @@ export function SaveButton({ datasetSlug }: { datasetSlug: string }) {
   }
 
   async function toggle() {
-    const sb = supabaseBrowser();
-    if (!userId) { window.location.href = "/login/"; return; }
-    if (!datasetId) return;
+    if (!signedIn) {
+      window.location.href = "/login/";
+      return;
+    }
+    if (busy || saved === null) return;
     setNotice(null);
-    if (saved) {
-      await sb.from("saved_datasets").delete().eq("user_id", userId).eq("dataset_id", datasetId);
-      setSaved(false);
-      return;
+    setBusy(true);
+    try {
+      const res = await fetch("/api/saved", {
+        method: saved ? "DELETE" : "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slug: datasetSlug }),
+      });
+      if (res.status === 401) {
+        window.location.href = "/login/";
+        return;
+      }
+      if (!res.ok) {
+        setNotice(await readError(res, saved ? "Could not remove this dataset from your saved list." : "Could not save this dataset."));
+        return;
+      }
+      setSaved(!saved);
+    } catch {
+      setNotice("Network error — try again.");
+    } finally {
+      setBusy(false);
     }
-    const { count } = await sb.from("saved_datasets")
-      .select("dataset_id", { count: "exact", head: true }).eq("user_id", userId);
-    if ((count ?? 0) >= SAVED_DATASET_LIMIT) {
-      setNotice(`You have ${SAVED_DATASET_LIMIT} saved datasets — remove one to save this.`);
-      return;
-    }
-    const { error } = await sb.from("saved_datasets").insert({ user_id: userId, dataset_id: datasetId });
-    if (!error) setSaved(true);
   }
 
   return (
     <span className="relative inline-flex flex-col items-end">
-      <button type="button" onClick={toggle}
-        className="rounded-md border border-border-strong px-4 py-2.5 text-sm text-foreground hover:bg-surface">
-        {saved === null ? "…" : saved ? "Saved ✓" : "Save"}
+      <button
+        type="button"
+        onClick={toggle}
+        disabled={busy || saved === null}
+        className="rounded-md border border-border-strong px-4 py-2.5 text-sm text-foreground hover:bg-surface disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        {saved === null ? "…" : busy ? "…" : saved ? "Saved ✓" : "Save"}
       </button>
-      {notice && <span className="mt-1.5 max-w-[220px] text-right text-[12px] leading-snug text-muted-foreground">{notice}</span>}
+      {notice && (
+        <span role="alert" className="mt-1.5 max-w-[240px] text-right text-[12px] leading-snug text-risk">
+          {notice}
+        </span>
+      )}
     </span>
   );
 }
