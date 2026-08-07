@@ -149,6 +149,22 @@ export function HowItWorks({ featured }: { featured: DatasetSummary[] }) {
 
   const strong = featured.find((d) => d.coverageTotal >= 85) ?? featured[0];
 
+  if (!strong) {
+    return (
+      <section className="border-t border-border bg-surface/40">
+        <div className="mx-auto max-w-6xl px-6 py-24 md:px-8 md:py-32">
+          <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-muted-foreground">How it works</p>
+          <h2 className="mt-5 max-w-2xl font-serif text-4xl leading-[1.1] tracking-[-0.03em] text-accent md:text-5xl">
+            From search to verified in an afternoon.
+          </h2>
+          <p className="mt-6 max-w-xl text-[15px] leading-relaxed text-muted-foreground">
+            Import datasets from the admin console to populate this preview. Until then, explore the docs or switch to mock mode.
+          </p>
+        </div>
+      </section>
+    );
+  }
+
   const visuals = [
     <SearchVisual key="s" items={featured} />,
     <VerifyVisual key="v" d={strong} />,
