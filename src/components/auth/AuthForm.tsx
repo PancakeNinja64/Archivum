@@ -27,11 +27,16 @@ const copy: Record<Mode, { title: string; blurb: string; cta: string }> = {
 export function AuthForm({ mode }: { mode: Mode }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [state, setState] = useState<"idle" | "busy" | "done">("idle");
   const [error, setError] = useState<string | null>(null);
 
   async function submit() {
     setError(null);
+    if (mode === "signup" && !acceptedTerms) {
+      setError("Please accept the Terms of Service and Privacy Policy to create an account.");
+      return;
+    }
     setState("busy");
     const sb = supabaseBrowser();
     try {
@@ -58,6 +63,11 @@ export function AuthForm({ mode }: { mode: Mode }) {
   }
 
   const c = copy[mode];
+  const canSubmit =
+    state !== "busy" &&
+    !!email &&
+    (mode === "reset" || password.length >= 8) &&
+    (mode !== "signup" || acceptedTerms);
 
   return (
     <div className="mx-auto max-w-md px-6 pb-24 pt-32 md:px-8">
@@ -88,10 +98,29 @@ export function AuthForm({ mode }: { mode: Mode }) {
               />
             </label>
           )}
+          {mode === "signup" && (
+            <label className="flex items-start gap-3 text-[13px] leading-snug text-muted-foreground">
+              <input
+                type="checkbox"
+                checked={acceptedTerms}
+                onChange={(e) => setAcceptedTerms(e.target.checked)}
+                className="mt-0.5 h-4 w-4 shrink-0 rounded border-border accent-[var(--accent-strong)]"
+              />
+              <span>
+                I agree to the{" "}
+                <Link href="/terms/" className="link-underline text-foreground">Terms of Service</Link>
+                {" "}and{" "}
+                <Link href="/privacy/" className="link-underline text-foreground">Privacy Policy</Link>
+                , and I understand the{" "}
+                <Link href="/disclaimer/" className="link-underline text-foreground">Disclaimer</Link>
+                {" "}(Archivum is not legal advice and does not grant dataset licences).
+              </span>
+            </label>
+          )}
           {error && <p className="text-sm leading-relaxed text-risk">{error}</p>}
           <button
             type="button" onClick={submit}
-            disabled={state === "busy" || !email || (mode !== "reset" && password.length < 8)}
+            disabled={!canSubmit}
             className="w-full rounded-md bg-accent-strong px-4 py-2.5 text-sm font-medium text-white transition-all duration-200 hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {state === "busy" ? "…" : c.cta}
@@ -107,7 +136,8 @@ export function AuthForm({ mode }: { mode: Mode }) {
       {mode === "signup" && (
         <p className="mt-6 text-[12px] leading-relaxed text-muted-foreground">
           Password only — no OAuth, no tracking. Your email is used for sign-in and password
-          resets, nothing else.
+          resets, nothing else. See our{" "}
+          <Link href="/privacy/" className="link-underline text-foreground">Privacy Policy</Link>.
         </p>
       )}
     </div>

@@ -25,7 +25,10 @@ const columns = [
     title: "Company",
     links: [
       { label: "Methodology", href: "/docs/#methodology" },
-      { label: "Contact", href: "mailto:hello@archivum.ai" },
+      { label: "Contact", href: "mailto:archivumllc@gmail.com" },
+      { label: "Terms", href: "/terms/" },
+      { label: "Privacy", href: "/privacy/" },
+      { label: "Disclaimer", href: "/disclaimer/" },
     ],
   },
 ];
@@ -69,9 +72,25 @@ export async function Footer() {
             ))}
           </div>
         </div>
-        <div className="mt-16 flex flex-col gap-3 border-t border-border pt-8 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-sm text-muted-foreground">© {new Date().getFullYear()} Archivum LLC.</p>
-          <p className="font-mono text-[11px] text-muted-foreground">Every dataset has a history.</p>
+        <div className="mt-16 space-y-6 border-t border-border pt-8">
+          <p className="max-w-3xl text-[12px] leading-relaxed text-muted-foreground">
+            Archivum indexes publicly available dataset metadata. We do not host dataset files.
+            Licence labels and Documentation Coverage are observational reports, not legal advice,
+            not a licence grant, and not a measure of data quality or safety. You are responsible
+            for reviewing source terms before use.{" "}
+            <Link href="/disclaimer/" className="link-underline text-foreground/80 hover:text-foreground">
+              Full disclaimer
+            </Link>
+            .
+          </p>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-muted-foreground">© {new Date().getFullYear()} Archivum LLC.</p>
+            <div className="flex flex-wrap gap-x-5 gap-y-1 font-mono text-[11px] text-muted-foreground">
+              <Link href="/terms/" className="hover:text-foreground">Terms</Link>
+              <Link href="/privacy/" className="hover:text-foreground">Privacy</Link>
+              <Link href="/disclaimer/" className="hover:text-foreground">Disclaimer</Link>
+            </div>
+          </div>
         </div>
       </div>
     </footer>
