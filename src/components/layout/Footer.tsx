@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Logo } from "./Logo";
+import { getFacets } from "@/lib/api/client";
 
 const columns = [
   {
@@ -29,7 +30,11 @@ const columns = [
   },
 ];
 
-export function Footer() {
+export async function Footer() {
+  const facets = await getFacets();
+  const count = facets.total;
+  const platforms = facets.platforms.length;
+
   return (
     <footer className="relative z-[1] border-t border-border">
       <div className="mx-auto max-w-6xl px-6 py-16 md:px-8 md:py-20">
@@ -38,7 +43,11 @@ export function Footer() {
             <span className="text-accent"><Logo height={24} /></span>
             <p className="mt-5 text-sm leading-relaxed text-muted-foreground">The record of public AI data.</p>
             <p className="tnum mt-3 font-mono text-[11px] text-muted-foreground">
-              Indexing 12,400+ datasets across 4 platforms
+              {count === 0
+                ? "Catalog starting up"
+                : `Indexing ${count.toLocaleString()} dataset${count === 1 ? "" : "s"}${
+                    platforms > 0 ? ` across ${platforms} platform${platforms === 1 ? "" : "s"}` : ""
+                  }`}
             </p>
           </div>
           <div className="grid grid-cols-2 gap-10 sm:grid-cols-3 sm:gap-16">

@@ -141,16 +141,39 @@ export async function getLineage(slug: string): Promise<LineageGraph | null> {
 }
 
 export async function getFacets(): Promise<Facets> {
-  const empty: Facets = { platforms: [], domains: [], modalities: [], languages: [], licenses: [] };
-  const { data } = await sb().from('catalog_facets').select('payload').eq('id', 1).maybeSingle();
-  const p = (data?.payload ?? {}) as Record<string, { value: string; count: number }[]>;
-  if (!p) return empty;
+  const empty: Facets = {
+    total: 0,
+    platforms: [],
+    domains: [],
+    modalities: [],
+    languages: [],
+    licenses: [],
+  };
+  const client = sb();
+  const { data } = await client.from('catalog_facets').select('payload').eq('id', 1).maybeSingle();
+  const p = (data?.payload ?? {}) as Record<string, unknown>;
+  if (!p || Object.keys(p).length === 0) {
+    const { count } = await client
+      .from('datasets')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'published');
+    return { ...empty, total: count ?? 0 };
+  }
+  let total = typeof p.total === 'number' ? p.total : 0;
+  if (!total) {
+    const { count } = await client
+      .from('datasets')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'published');
+    total = count ?? 0;
+  }
   return {
+    total,
     platforms: (p.platforms ?? []) as Facets['platforms'],
-    domains: p.domains ?? [],
+    domains: (p.domains ?? []) as Facets['domains'],
     modalities: (p.modalities ?? []) as Facets['modalities'],
-    languages: p.languages ?? [],
-    licenses: p.licenses ?? [],
+    languages: (p.languages ?? []) as Facets['languages'],
+    licenses: (p.licenses ?? []) as Facets['licenses'],
   };
 }
 

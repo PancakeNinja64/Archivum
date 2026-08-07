@@ -80,6 +80,7 @@ export async function getFacets(): Promise<Facets> {
       .sort((a, b) => b.count - a.count);
   };
   return delay({
+    total: DATASETS.length,
     platforms: tally(DATASETS.map((d) => d.platform) as Platform[]),
     modalities: tally(DATASETS.map((d) => d.modality) as Modality[]),
     domains: tally(DATASETS.flatMap((d) => d.domain)),

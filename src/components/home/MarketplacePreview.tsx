@@ -10,11 +10,18 @@ import { CardSkeleton } from "../ui/Skeleton";
 
 const MODALITIES: Modality[] = ["text", "image", "audio", "tabular"];
 
-export function MarketplacePreview({ initial }: { initial: DatasetSummary[] }) {
+export function MarketplacePreview({
+  initial,
+  catalogCount,
+}: {
+  initial: DatasetSummary[];
+  catalogCount: number;
+}) {
   const reduce = useReducedMotion();
   const [modality, setModality] = useState<Modality | null>(null);
   const [minScore, setMinScore] = useState(0);
   const [rows, setRows] = useState<DatasetSummary[] | null>(initial);
+  const countLabel = catalogCount.toLocaleString();
 
   useEffect(() => {
     let live = true;
@@ -44,7 +51,7 @@ export function MarketplacePreview({ initial }: { initial: DatasetSummary[] }) {
       <div className="mx-auto max-w-6xl px-6 md:px-8">
         <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-muted-foreground">The index</p>
         <h2 className="mt-5 font-serif text-4xl leading-[1.1] tracking-[-0.03em] text-accent md:text-5xl">
-          12,400 datasets. Every one graded.
+          {countLabel} dataset{catalogCount === 1 ? "" : "s"}. Every one graded.
         </h2>
 
         <div className="mt-10 flex flex-wrap items-center gap-3">
@@ -104,7 +111,7 @@ export function MarketplacePreview({ initial }: { initial: DatasetSummary[] }) {
 
         <p className="mt-10">
           <Link href="/explore/" className="link-underline text-accent-strong dark:text-accent">
-            Explore all 12,400 datasets →
+            Explore all {countLabel} dataset{catalogCount === 1 ? "" : "s"} →
           </Link>
         </p>
       </div>

@@ -165,6 +165,8 @@ export interface Paginated<T> {
 }
 
 export interface Facets {
+  /** Published datasets in the catalog. */
+  total: number;
   platforms: { value: Platform; count: number }[];
   domains: { value: string; count: number }[];
   modalities: { value: Modality; count: number }[];

@@ -2,7 +2,17 @@ import type { DatasetSummary } from "@/lib/types";
 import { Button } from "../ui/Button";
 import { HeroPassport } from "./HeroPassport";
 
-export function Hero({ featured }: { featured: DatasetSummary[] }) {
+export function Hero({
+  featured,
+  catalogCount,
+  platformCount,
+}: {
+  featured: DatasetSummary[];
+  catalogCount: number;
+  platformCount: number;
+}) {
+  const datasets = catalogCount.toLocaleString();
+  const platforms = platformCount.toLocaleString();
   return (
     <section className="relative flex min-h-[100svh] flex-col justify-center overflow-hidden pb-20 pt-28 md:pt-32">
       <div
@@ -33,8 +43,9 @@ export function Hero({ featured }: { featured: DatasetSummary[] }) {
             <Button href="/docs/#methodology" variant="secondary">Read the methodology</Button>
           </div>
           <p className="tnum mt-8 font-mono text-[12px] text-muted-foreground">
-            {/* Placeholder metrics — replace before launch */}
-            12,400 datasets indexed · 4 platforms · independent of every one of them
+            {datasets} dataset{catalogCount === 1 ? "" : "s"} indexed
+            {platformCount > 0 ? ` · ${platforms} platform${platformCount === 1 ? "" : "s"}` : ""}
+            {" · "}independent of every one of them
           </p>
         </div>
         <HeroPassport datasets={featured.slice(0, 4)} />
