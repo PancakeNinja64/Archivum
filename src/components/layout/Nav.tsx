@@ -62,8 +62,8 @@ export function Nav() {
           className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6 md:px-8"
         >
           <Link href="/" className="text-accent transition-opacity duration-200 hover:opacity-80" aria-label="Archivum home">
-            <span className="hidden sm:inline-flex"><Logo height={22} /></span>
-            <span className="sm:hidden"><LogoMark height={24} /></span>
+            <span className="hidden sm:inline-flex"><Logo height={26} /></span>
+            <span className="sm:hidden"><LogoMark height={26} /></span>
           </Link>
 
           <ul className="hidden items-center gap-7 lg:flex">

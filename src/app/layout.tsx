@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     locale: "en_US",
     siteName: "Archivum",
   },
-  icons: { icon: "/favicon.svg", apple: "/favicon.svg" },
+  icons: { icon: "/favicon-new.svg", apple: "/favicon-new.svg" },
 };
 
 export const viewport: Viewport = {
