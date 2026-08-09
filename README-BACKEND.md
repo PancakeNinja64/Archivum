@@ -29,7 +29,7 @@ nine variables in Vercel → Project → Settings → Environment Variables.
 | `NEXT_PUBLIC_DATA_SOURCE` | `mock` until the first import succeeds, then `supabase` |
 | `HF_TOKEN` | huggingface.co → Settings → Access Tokens (read). Optional but raises rate limits |
 | `GITHUB_TOKEN` | github.com → Settings → Developer settings → Personal access tokens (public repo, read-only) |
-| `ADMIN_EMAILS` | `archivumllc@gmail.com` (comma-separate to add more) |
+| `ADMIN_EMAILS` | `business@archivum.tech` (comma-separate to add more) |
 | `NEXT_PUBLIC_APP_URL` | The deployed URL, e.g. `https://archivum.vercel.app` |
 | `CRON_SECRET` | Any long random string. Vercel Cron sends it; the endpoint checks it |
 

@@ -69,8 +69,8 @@ export default function DisclaimerPage() {
 
       <LegalSection title="Contact">
         <p>
-          <a href="mailto:archivumllc@gmail.com" className="link-underline text-accent-strong dark:text-accent">
-            archivumllc@gmail.com
+          <a href="mailto:business@archivum.tech" className="link-underline text-accent-strong dark:text-accent">
+            business@archivum.tech
           </a>
         </p>
       </LegalSection>

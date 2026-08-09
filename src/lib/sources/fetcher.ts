@@ -55,7 +55,7 @@ export async function sourceFetch(
   opts: { token?: string | null; etag?: string | null; accept?: string } = {},
 ): Promise<FetchOutcome> {
   const headers: Record<string, string> = {
-    'User-Agent': 'Archivum/1.0 (catalog; contact: archivumllc@gmail.com)',
+    'User-Agent': 'Archivum/1.0 (catalog; contact: business@archivum.tech)',
     Accept: opts.accept ?? 'application/json',
   };
   if (opts.token) headers.Authorization = `Bearer ${opts.token}`;

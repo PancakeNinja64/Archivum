@@ -107,8 +107,8 @@ export default function PrivacyPage() {
       <LegalSection title="10. Contact">
         <p>
           Privacy requests:{" "}
-          <a href="mailto:archivumllc@gmail.com" className="link-underline text-accent-strong dark:text-accent">
-            archivumllc@gmail.com
+          <a href="mailto:business@archivum.tech" className="link-underline text-accent-strong dark:text-accent">
+            business@archivum.tech
           </a>
           .
         </p>

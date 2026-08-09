@@ -25,7 +25,7 @@ const columns = [
     title: "Company",
     links: [
       { label: "Methodology", href: "/docs/#methodology" },
-      { label: "Contact", href: "mailto:archivumllc@gmail.com" },
+      { label: "Contact", href: "mailto:business@archivum.tech" },
       { label: "Terms", href: "/terms/" },
       { label: "Privacy", href: "/privacy/" },
       { label: "Disclaimer", href: "/disclaimer/" },

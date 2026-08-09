@@ -213,7 +213,7 @@ export default function DocsPage() {
           </p>
           <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
             Use <em>Suggest a correction</em> on any dataset page, or write to{" "}
-            <a href="mailto:archivumllc@gmail.com" className="link-underline text-accent-strong dark:text-accent">archivumllc@gmail.com</a>{" "}
+            <a href="mailto:business@archivum.tech" className="link-underline text-accent-strong dark:text-accent">business@archivum.tech</a>{" "}
             with the dataset slug and the field in question.
           </p>
         </section>
