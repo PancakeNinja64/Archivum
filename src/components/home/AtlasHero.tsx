@@ -7,9 +7,9 @@ import { ATLAS_FIXTURE } from '@/lib/atlas/fixture';
  * The landing view: the Atlas takes the viewport, the positioning copy sits
  * over it.
  *
- * The section is scoped `dark` on purpose. The field is dark-only — a hologram
- * on white is not a hologram — and scoping lets the canvas read real dark
- * token values through getComputedStyle instead of hard-coding any colour.
+ * Background and canvas tokens follow the site theme (light/dark). The field
+ * wrapper reads computed design tokens so the visualization matches the rest
+ * of the page without hard-coded colours.
  *
  * The h1, subhead and dataset names are server-rendered. Losing an indexable
  * homepage to a canvas would be a net loss.
@@ -26,7 +26,7 @@ export function AtlasHero({
   const platforms = (platformCount || field.platformCount).toLocaleString();
 
   return (
-    <section className="dark relative flex min-h-[100svh] flex-col justify-center overflow-hidden bg-background">
+    <section className="relative flex min-h-[100svh] flex-col justify-center overflow-hidden bg-background">
       <AtlasField field={field} />
 
       {/* Scrim: holds headline contrast whatever rotates behind it. */}

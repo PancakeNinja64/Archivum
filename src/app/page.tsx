@@ -1,5 +1,5 @@
 import { getFeatured, getFacets } from "@/lib/api/client";
-import { Hero } from "@/components/home/Hero";
+import { AtlasHero } from "@/components/home/AtlasHero";
 import { Problem } from "@/components/home/Problem";
 import { HowItWorks } from "@/components/home/HowItWorks";
 import { CoverageMethod } from "@/components/home/CoverageMethod";
@@ -16,7 +16,7 @@ export default async function Home() {
   const platformCount = facets.platforms.length;
   return (
     <>
-      <Hero featured={featured} catalogCount={catalogCount} platformCount={platformCount} />
+      <AtlasHero catalogCount={catalogCount} platformCount={platformCount} />
       <Problem />
       <HowItWorks featured={featured} />
       <CoverageMethod />

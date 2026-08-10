@@ -2,8 +2,8 @@
  * Atlas drawing — canvas routines and token resolution.
  *
  * Canvas cannot consume `var(--token)`, so every colour is resolved once from
- * computed style against a dark-scoped element and cached. No colour literal
- * appears in this file: the design system stays the single source of truth.
+ * computed style against the field wrapper. No colour literal appears in this
+ * file: the design system stays the single source of truth.
  */
 
 import { coverageColorVar } from '@/lib/utils';
@@ -34,9 +34,8 @@ const TOKEN_MAP: Record<keyof Tokens, string> = {
 };
 
 /**
- * Read the token set from a scoped element. Pass the Atlas wrapper, which
- * carries the `dark` class: the field is dark-only, and reading through that
- * scope gives dark values without hard-coding any of them.
+ * Read the token set from a scoped element. Pass the Atlas wrapper so
+ * inherited theme variables resolve to the active light or dark palette.
  */
 export function readTokens(scope: HTMLElement): Tokens {
   const cs = getComputedStyle(scope);

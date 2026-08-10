@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { useReducedMotion } from 'framer-motion';
 import {
   BASE_TILT_X,
@@ -22,16 +21,23 @@ import {
   withAlpha,
   type Tokens,
 } from '@/lib/atlas/draw';
-import type { AtlasField as Field, AtlasNode, ProjectedNode } from '@/lib/atlas/types';
+import type { AtlasField as Field, ProjectedNode } from '@/lib/atlas/types';
 import { drawReticle } from './AtlasReticle';
-import { AtlasA11y } from './AtlasA11y';
 
-const ROTATION_PER_MS = 0.00035;
-const PARALLAX_MAX = 0.06;
-const PARALLAX_EASE = 0.06;
-const SWEEP_PERIOD = 14000;
-const SWEEP_DURATION = 2200;
-const SWEEP_WIDTH = 40;
+const DRAG_ROTATE_SENS = 0.004;
+const DRAG_TILT_SENS = 0.0025;
+const ROTATION_PER_MS = 0.00008;
+const TILT_X_MIN = -0.75;
+const TILT_X_MAX = 0.25;
+const ZOOM_MIN = 0.45;
+const ZOOM_MAX = 2.25;
+const ZOOM_DEFAULT = 1;
+/** Scroll-zoom hit area — tight band over the projected node cloud (not headline/legend). */
+const WHEEL_ZONE_X_MIN = 0.48;
+const WHEEL_ZONE_X_MAX = 0.82;
+const WHEEL_ZONE_Y_MIN = 0.26;
+const WHEEL_ZONE_Y_MAX = 0.68;
+const INTERACTION_IDLE_MS = 2500;
 const RETICLE_MS = 220;
 const MOBILE_NODES = 60;
 const SPARSE_THRESHOLD = 24;
@@ -40,22 +46,24 @@ const RING_RADII = [230, 370, 510];
 const RING_ALPHA = [0.3, 0.21, 0.14];
 
 export function AtlasField({ field }: { field: Field }) {
-  const router = useRouter();
   const reduce = useReducedMotion();
 
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   const [isMobile, setIsMobile] = useState(false);
-  const [sheetNode, setSheetNode] = useState<AtlasNode | null>(null);
 
   /* Mutable frame state — deliberately refs, so nothing here re-renders React. */
   const thetaRef = useRef(0);
   const tiltYRef = useRef(0);
-  const tiltYTargetRef = useRef(0);
   const tiltXRef = useRef(BASE_TILT_X);
-  const tiltXTargetRef = useRef(BASE_TILT_X);
+  const zoomRef = useRef(ZOOM_DEFAULT);
   const pointerRef = useRef<{ x: number; y: number } | null>(null);
+  const draggingRef = useRef(false);
+  const lastDragRef = useRef({ x: 0, y: 0 });
+  const pinchRef = useRef<{ dist: number; zoom: number } | null>(null);
+  const autoSpinEnabledRef = useRef(true);
+  const lastInteractionRef = useRef(0);
   const activeSlugRef = useRef<string | null>(null);
   const reticleRef = useRef(0);
   const projectedRef = useRef<ProjectedNode[]>([]);
@@ -89,12 +97,6 @@ export function AtlasField({ field }: { field: Field }) {
     [nodes],
   );
 
-  const nodeIndex = useMemo(() => {
-    const m = new Map<string, number>();
-    nodes.forEach((n, i) => m.set(n.slug, i));
-    return m;
-  }, [nodes]);
-
   /** slug -> set of connected slugs, for the reticle's edge highlighting. */
   const adjacency = useMemo(() => {
     const m = new Map<string, Set<string>>();
@@ -106,17 +108,6 @@ export function AtlasField({ field }: { field: Field }) {
     }
     return m;
   }, [edges]);
-
-  const setActive = useCallback((slug: string | null) => {
-    activeSlugRef.current = slug;
-  }, []);
-
-  const openNode = useCallback(
-    (slug: string) => {
-      router.push(`/datasets/${slug}/`);
-    },
-    [router],
-  );
 
   /* Viewport class. */
   useEffect(() => {
@@ -165,8 +156,45 @@ export function AtlasField({ field }: { field: Field }) {
     };
   }, []);
 
-  /* Pause when off-screen or backgrounded. A canvas spinning behind the
-     footer is pure battery cost. */
+  const markInteracting = useCallback(() => {
+    lastInteractionRef.current = performance.now();
+    autoSpinEnabledRef.current = false;
+  }, []);
+
+  /** Wheel zoom only in the visible atlas band — not over headline copy or legend. */
+  const isAtlasWheelZone = useCallback((clientX: number, clientY: number) => {
+    const wrap = wrapRef.current;
+    if (!wrap) return false;
+    const rect = wrap.getBoundingClientRect();
+    const relX = (clientX - rect.left) / rect.width;
+    const relY = (clientY - rect.top) / rect.height;
+    return (
+      relX >= WHEEL_ZONE_X_MIN &&
+      relX <= WHEEL_ZONE_X_MAX &&
+      relY >= WHEEL_ZONE_Y_MIN &&
+      relY <= WHEEL_ZONE_Y_MAX
+    );
+  }, []);
+
+  /* Scroll zoom — only while the pointer is over the atlas visualization. */
+  useEffect(() => {
+    const wrap = wrapRef.current;
+    if (!wrap) return;
+
+    const clampZoom = (z: number) => Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, z));
+
+    const onWheel = (e: WheelEvent) => {
+      if (!isAtlasWheelZone(e.clientX, e.clientY)) return;
+      e.preventDefault();
+      markInteracting();
+      zoomRef.current = clampZoom(zoomRef.current * Math.exp(-e.deltaY * 0.002));
+    };
+
+    wrap.addEventListener('wheel', onWheel, { passive: false });
+    return () => wrap.removeEventListener('wheel', onWheel);
+  }, [isAtlasWheelZone, markInteracting]);
+
+  /* Pause when off-screen or backgrounded. */
   useEffect(() => {
     const wrap = wrapRef.current;
     if (!wrap) return;
@@ -212,16 +240,18 @@ export function AtlasField({ field }: { field: Field }) {
       if (w < 2 || h < 2) return;
 
       const elapsed = now - startedRef.current;
-      const speed = isMobile ? 0.5 : 1;
-      if (!reduce) thetaRef.current += ROTATION_PER_MS * dt * speed;
+      const zoom = zoomRef.current;
 
-      /* Parallax easing. */
-      if (!reduce && !isMobile) {
-        tiltYRef.current += (tiltYTargetRef.current - tiltYRef.current) * PARALLAX_EASE;
-        tiltXRef.current += (tiltXTargetRef.current - tiltXRef.current) * PARALLAX_EASE;
-      } else {
-        tiltYRef.current = 0;
-        tiltXRef.current = BASE_TILT_X;
+      const interacting = draggingRef.current || pinchRef.current !== null;
+      if (interacting) {
+        lastInteractionRef.current = now;
+        autoSpinEnabledRef.current = false;
+      } else if (!reduce && now - lastInteractionRef.current >= INTERACTION_IDLE_MS) {
+        autoSpinEnabledRef.current = true;
+      }
+
+      if (!reduce && autoSpinEnabledRef.current) {
+        thetaRef.current += ROTATION_PER_MS * dt;
       }
 
       const cx = w / 2;
@@ -230,7 +260,8 @@ export function AtlasField({ field }: { field: Field }) {
       const cy = h / 2 - 30;
 
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctx.clearRect(0, 0, w, h);
+      ctx.fillStyle = tokens.background;
+      ctx.fillRect(0, 0, w, h);
 
       const opts = {
         theta: thetaRef.current,
@@ -238,7 +269,7 @@ export function AtlasField({ field }: { field: Field }) {
         tiltY: tiltYRef.current,
         cx,
         cy,
-        zoom: 1,
+        zoom,
         maxRows,
       };
 
@@ -247,13 +278,13 @@ export function AtlasField({ field }: { field: Field }) {
       const groundFade = reduce ? 1 : Math.min(1, elapsed / 300);
       RING_RADII.forEach((radius, i) => {
         const pts = groundRing(radius)
-          .map((p) => project(transform(p, opts.theta, opts.tiltX, opts.tiltY), cx, cy, 1))
+          .map((p) => project(transform(p, opts.theta, opts.tiltX, opts.tiltY), cx, cy, zoom))
           .filter((p): p is NonNullable<typeof p> => p !== null);
         drawPolyline(ctx, pts, withAlpha(tokens.borderStrong, RING_ALPHA[i] * groundFade), 1);
       });
       groundSpokes(RING_RADII[2]).forEach(([a, b]) => {
-        const pa = project(transform(a, opts.theta, opts.tiltX, opts.tiltY), cx, cy, 1);
-        const pb = project(transform(b, opts.theta, opts.tiltX, opts.tiltY), cx, cy, 1);
+        const pa = project(transform(a, opts.theta, opts.tiltX, opts.tiltY), cx, cy, zoom);
+        const pb = project(transform(b, opts.theta, opts.tiltX, opts.tiltY), cx, cy, zoom);
         if (pa && pb) drawPolyline(ctx, [pa, pb], withAlpha(tokens.borderStrong, 0.095 * groundFade), 1);
       });
 
@@ -263,13 +294,11 @@ export function AtlasField({ field }: { field: Field }) {
       const byslug = new Map<string, ProjectedNode>();
       for (const p of projected) byslug.set(p.node.slug, p);
 
-      /* Hit test against the fresh projection. */
-      if (pointerRef.current && !isMobile) {
+      /* Hit test against the fresh projection (hover highlight). */
+      if (pointerRef.current && !isMobile && !draggingRef.current) {
         const hit = hitTest(projected, pointerRef.current.x, pointerRef.current.y);
         if (hit) activeSlugRef.current = hit.node.slug;
-        else if (document.activeElement?.getAttribute('data-atlas-node') == null) {
-          activeSlugRef.current = null;
-        }
+        else activeSlugRef.current = null;
       }
 
       const active = activeSlugRef.current;
@@ -282,13 +311,6 @@ export function AtlasField({ field }: { field: Field }) {
       reticleRef.current = reduce
         ? target
         : Math.max(0, Math.min(1, reticleRef.current + (target ? step : -step)));
-
-      /* Scan sweep — a slow pass of attention, not a strobe. */
-      let sweepZ: number | null = null;
-      if (!reduce && !isMobile) {
-        const phase = elapsed % SWEEP_PERIOD;
-        if (phase < SWEEP_DURATION) sweepZ = -420 + (phase / SWEEP_DURATION) * 840;
-      }
 
       /* Edges. */
       for (const e of edges) {
@@ -315,13 +337,6 @@ export function AtlasField({ field }: { field: Field }) {
         let scale = 1;
         if (active) scale = slug === active || connected.has(slug) ? 1 : 0.12;
 
-        if (sweepZ !== null) {
-          const d = Math.abs(p.z - sweepZ);
-          if (d < SWEEP_WIDTH * 3) {
-            scale *= 1 + 1.6 * Math.exp(-((d / SWEEP_WIDTH) ** 2));
-          }
-        }
-
         const color = bandColor(wrap, p.node.coverageTotal);
         drawNode(ctx, p, color, tokens, scale, entrance);
 
@@ -345,94 +360,119 @@ export function AtlasField({ field }: { field: Field }) {
     return () => {
       if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
     };
-  }, [nodes, edges, adjacency, nodeIndex, maxRows, reduce, isMobile, sparse]);
+  }, [nodes, edges, adjacency, maxRows, reduce, isMobile, sparse]);
 
-  /* Pointer. */
-  const onPointerMove = useCallback((e: React.PointerEvent<HTMLCanvasElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    pointerRef.current = { x, y };
-    tiltYTargetRef.current = ((x / rect.width) * 2 - 1) * PARALLAX_MAX;
-    tiltXTargetRef.current = BASE_TILT_X + ((y / rect.height) * 2 - 1) * PARALLAX_MAX * 0.5;
+  const clampTiltX = (v: number) => Math.max(TILT_X_MIN, Math.min(TILT_X_MAX, v));
+
+  const applyDrag = useCallback((clientX: number, clientY: number) => {
+    const dx = clientX - lastDragRef.current.x;
+    const dy = clientY - lastDragRef.current.y;
+    lastDragRef.current = { x: clientX, y: clientY };
+    thetaRef.current += dx * DRAG_ROTATE_SENS;
+    tiltXRef.current = clampTiltX(tiltXRef.current + dy * DRAG_TILT_SENS);
+    tiltYRef.current = 0;
+  }, []);
+
+  /* Pointer — drag to rotate, hover to highlight. */
+  const onPointerDown = useCallback((e: React.PointerEvent<HTMLCanvasElement>) => {
+    markInteracting();
+    draggingRef.current = true;
+    lastDragRef.current = { x: e.clientX, y: e.clientY };
+    e.currentTarget.setPointerCapture(e.pointerId);
+  }, [markInteracting]);
+
+  const onPointerMove = useCallback(
+    (e: React.PointerEvent<HTMLCanvasElement>) => {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      pointerRef.current = { x, y };
+
+      if (draggingRef.current) {
+        applyDrag(e.clientX, e.clientY);
+        return;
+      }
+
+      if (!isMobile) {
+        const hit = hitTest(projectedRef.current, x, y);
+        if (hit) activeSlugRef.current = hit.node.slug;
+        else activeSlugRef.current = null;
+      }
+    },
+    [applyDrag, isMobile],
+  );
+
+  const onPointerUp = useCallback((e: React.PointerEvent<HTMLCanvasElement>) => {
+    draggingRef.current = false;
+    if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    }
   }, []);
 
   const onPointerLeave = useCallback(() => {
-    pointerRef.current = null;
-    activeSlugRef.current = null;
-    tiltYTargetRef.current = 0;
-    tiltXTargetRef.current = BASE_TILT_X;
+    if (!draggingRef.current) {
+      pointerRef.current = null;
+      activeSlugRef.current = null;
+    }
   }, []);
 
-  const onClick = useCallback(() => {
-    const slug = activeSlugRef.current;
-    if (!slug) return;
-    if (isMobile) {
-      setSheetNode(nodes.find((n) => n.slug === slug) ?? null);
+  const touchDist = (touches: React.TouchList) => {
+    if (touches.length < 2) return 0;
+    const dx = touches[0].clientX - touches[1].clientX;
+    const dy = touches[0].clientY - touches[1].clientY;
+    return Math.hypot(dx, dy);
+  };
+
+  const onTouchStart = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
+    markInteracting();
+    if (e.touches.length === 2) {
+      pinchRef.current = { dist: touchDist(e.touches), zoom: zoomRef.current };
       return;
     }
-    openNode(slug);
-  }, [isMobile, nodes, openNode]);
+    const t = e.touches[0];
+    if (!t) return;
+    draggingRef.current = true;
+    lastDragRef.current = { x: t.clientX, y: t.clientY };
+  }, [markInteracting]);
 
-  const onTouchStart = useCallback(
-    (e: React.TouchEvent<HTMLCanvasElement>) => {
-      const t = e.touches[0];
-      if (!t) return;
-      const rect = e.currentTarget.getBoundingClientRect();
-      const hit = hitTest(
-        projectedRef.current,
-        t.clientX - rect.left,
-        t.clientY - rect.top,
-        14,
-      );
-      setSheetNode(hit ? hit.node : null);
-    },
-    [],
-  );
+  const onTouchMove = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
+    if (e.touches.length === 2 && pinchRef.current) {
+      e.preventDefault();
+      const dist = touchDist(e.touches);
+      if (dist > 0 && pinchRef.current.dist > 0) {
+        const ratio = dist / pinchRef.current.dist;
+        zoomRef.current = Math.max(
+          ZOOM_MIN,
+          Math.min(ZOOM_MAX, pinchRef.current.zoom * ratio),
+        );
+      }
+      return;
+    }
+    if (!draggingRef.current || e.touches.length !== 1) return;
+    const t = e.touches[0];
+    if (!t) return;
+    applyDrag(t.clientX, t.clientY);
+  }, [applyDrag]);
+
+  const onTouchEnd = useCallback(() => {
+    draggingRef.current = false;
+    pinchRef.current = null;
+  }, []);
 
   return (
-    <div ref={wrapRef} className="absolute inset-0 overflow-hidden">
+    <div ref={wrapRef} className="absolute inset-0 overflow-hidden bg-background">
       <canvas
         ref={canvasRef}
         aria-hidden
-        className="h-full w-full touch-pan-y"
+        className="h-full w-full cursor-grab touch-none active:cursor-grabbing"
+        onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
         onPointerLeave={onPointerLeave}
-        onClick={onClick}
         onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
       />
-
-      <AtlasA11y nodes={nodes} onFocusNode={setActive} onActivate={openNode} />
-
-      {sheetNode && (
-        <div className="absolute inset-x-0 bottom-0 z-20 border-t border-border bg-surface p-5 md:hidden">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="font-mono text-[13px] text-foreground">{sheetNode.name}</p>
-              <p className="mt-1 font-mono text-[11px] text-muted-foreground">
-                {sheetNode.publisher}
-              </p>
-              <p className="tnum mt-2 font-mono text-[11px] text-muted-foreground">
-                {sheetNode.coverageTotal}% documented · {sheetNode.license}
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => setSheetNode(null)}
-              className="font-mono text-[11px] text-muted-foreground"
-            >
-              Close
-            </button>
-          </div>
-          <button
-            type="button"
-            onClick={() => openNode(sheetNode.slug)}
-            className="link-underline mt-4 font-mono text-[12px] text-accent"
-          >
-            Open the record →
-          </button>
-        </div>
-      )}
     </div>
   );
 }
