@@ -12,11 +12,11 @@ import {
   transform,
 } from '@/lib/atlas/projection';
 import {
-  bandColor,
   drawEdge,
   drawLabel,
   drawNode,
   drawPolyline,
+  nodeColor,
   readTokens,
   withAlpha,
   type Tokens,
@@ -29,14 +29,6 @@ const DRAG_TILT_SENS = 0.0025;
 const ROTATION_PER_MS = 0.00008;
 const TILT_X_MIN = -0.75;
 const TILT_X_MAX = 0.25;
-const ZOOM_MIN = 0.45;
-const ZOOM_MAX = 2.25;
-const ZOOM_DEFAULT = 1;
-/** Scroll-zoom hit area — tight band over the projected node cloud (not headline/legend). */
-const WHEEL_ZONE_X_MIN = 0.48;
-const WHEEL_ZONE_X_MAX = 0.82;
-const WHEEL_ZONE_Y_MIN = 0.26;
-const WHEEL_ZONE_Y_MAX = 0.68;
 const INTERACTION_IDLE_MS = 2500;
 const RETICLE_MS = 220;
 const MOBILE_NODES = 60;
@@ -57,11 +49,9 @@ export function AtlasField({ field }: { field: Field }) {
   const thetaRef = useRef(0);
   const tiltYRef = useRef(0);
   const tiltXRef = useRef(BASE_TILT_X);
-  const zoomRef = useRef(ZOOM_DEFAULT);
   const pointerRef = useRef<{ x: number; y: number } | null>(null);
   const draggingRef = useRef(false);
   const lastDragRef = useRef({ x: 0, y: 0 });
-  const pinchRef = useRef<{ dist: number; zoom: number } | null>(null);
   const autoSpinEnabledRef = useRef(true);
   const lastInteractionRef = useRef(0);
   const activeSlugRef = useRef<string | null>(null);
@@ -161,39 +151,6 @@ export function AtlasField({ field }: { field: Field }) {
     autoSpinEnabledRef.current = false;
   }, []);
 
-  /** Wheel zoom only in the visible atlas band — not over headline copy or legend. */
-  const isAtlasWheelZone = useCallback((clientX: number, clientY: number) => {
-    const wrap = wrapRef.current;
-    if (!wrap) return false;
-    const rect = wrap.getBoundingClientRect();
-    const relX = (clientX - rect.left) / rect.width;
-    const relY = (clientY - rect.top) / rect.height;
-    return (
-      relX >= WHEEL_ZONE_X_MIN &&
-      relX <= WHEEL_ZONE_X_MAX &&
-      relY >= WHEEL_ZONE_Y_MIN &&
-      relY <= WHEEL_ZONE_Y_MAX
-    );
-  }, []);
-
-  /* Scroll zoom — only while the pointer is over the atlas visualization. */
-  useEffect(() => {
-    const wrap = wrapRef.current;
-    if (!wrap) return;
-
-    const clampZoom = (z: number) => Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, z));
-
-    const onWheel = (e: WheelEvent) => {
-      if (!isAtlasWheelZone(e.clientX, e.clientY)) return;
-      e.preventDefault();
-      markInteracting();
-      zoomRef.current = clampZoom(zoomRef.current * Math.exp(-e.deltaY * 0.002));
-    };
-
-    wrap.addEventListener('wheel', onWheel, { passive: false });
-    return () => wrap.removeEventListener('wheel', onWheel);
-  }, [isAtlasWheelZone, markInteracting]);
-
   /* Pause when off-screen or backgrounded. */
   useEffect(() => {
     const wrap = wrapRef.current;
@@ -240,10 +197,8 @@ export function AtlasField({ field }: { field: Field }) {
       if (w < 2 || h < 2) return;
 
       const elapsed = now - startedRef.current;
-      const zoom = zoomRef.current;
 
-      const interacting = draggingRef.current || pinchRef.current !== null;
-      if (interacting) {
+      if (draggingRef.current) {
         lastInteractionRef.current = now;
         autoSpinEnabledRef.current = false;
       } else if (!reduce && now - lastInteractionRef.current >= INTERACTION_IDLE_MS) {
@@ -269,7 +224,7 @@ export function AtlasField({ field }: { field: Field }) {
         tiltY: tiltYRef.current,
         cx,
         cy,
-        zoom,
+        zoom: 1,
         maxRows,
       };
 
@@ -278,13 +233,13 @@ export function AtlasField({ field }: { field: Field }) {
       const groundFade = reduce ? 1 : Math.min(1, elapsed / 300);
       RING_RADII.forEach((radius, i) => {
         const pts = groundRing(radius)
-          .map((p) => project(transform(p, opts.theta, opts.tiltX, opts.tiltY), cx, cy, zoom))
+          .map((p) => project(transform(p, opts.theta, opts.tiltX, opts.tiltY), cx, cy, 1))
           .filter((p): p is NonNullable<typeof p> => p !== null);
         drawPolyline(ctx, pts, withAlpha(tokens.borderStrong, RING_ALPHA[i] * groundFade), 1);
       });
       groundSpokes(RING_RADII[2]).forEach(([a, b]) => {
-        const pa = project(transform(a, opts.theta, opts.tiltX, opts.tiltY), cx, cy, zoom);
-        const pb = project(transform(b, opts.theta, opts.tiltX, opts.tiltY), cx, cy, zoom);
+        const pa = project(transform(a, opts.theta, opts.tiltX, opts.tiltY), cx, cy, 1);
+        const pb = project(transform(b, opts.theta, opts.tiltX, opts.tiltY), cx, cy, 1);
         if (pa && pb) drawPolyline(ctx, [pa, pb], withAlpha(tokens.borderStrong, 0.095 * groundFade), 1);
       });
 
@@ -337,8 +292,18 @@ export function AtlasField({ field }: { field: Field }) {
         let scale = 1;
         if (active) scale = slug === active || connected.has(slug) ? 1 : 0.12;
 
-        const color = bandColor(wrap, p.node.coverageTotal);
-        drawNode(ctx, p, color, tokens, scale, entrance);
+        const color = nodeColor(p.node.coverageTotal, tokens);
+        drawNode(
+          ctx,
+          p,
+          color,
+          tokens,
+          scale,
+          entrance,
+          opts.theta,
+          opts.tiltX,
+          opts.tiltY,
+        );
 
         const labelled =
           sparse ||
@@ -346,7 +311,7 @@ export function AtlasField({ field }: { field: Field }) {
           (p.node.coverageTotal >= 75 && p.depth > 0.6);
         if (labelled && !isMobile) {
           const a = (slug === active ? 0.95 : 0.35 + 0.4 * p.depth) * entrance * Math.min(1, scale);
-          drawLabel(ctx, p, tokens, a);
+          drawLabel(ctx, p, tokens, a, true);
         }
       }
 
@@ -416,19 +381,8 @@ export function AtlasField({ field }: { field: Field }) {
     }
   }, []);
 
-  const touchDist = (touches: React.TouchList) => {
-    if (touches.length < 2) return 0;
-    const dx = touches[0].clientX - touches[1].clientX;
-    const dy = touches[0].clientY - touches[1].clientY;
-    return Math.hypot(dx, dy);
-  };
-
   const onTouchStart = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
     markInteracting();
-    if (e.touches.length === 2) {
-      pinchRef.current = { dist: touchDist(e.touches), zoom: zoomRef.current };
-      return;
-    }
     const t = e.touches[0];
     if (!t) return;
     draggingRef.current = true;
@@ -436,18 +390,6 @@ export function AtlasField({ field }: { field: Field }) {
   }, [markInteracting]);
 
   const onTouchMove = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
-    if (e.touches.length === 2 && pinchRef.current) {
-      e.preventDefault();
-      const dist = touchDist(e.touches);
-      if (dist > 0 && pinchRef.current.dist > 0) {
-        const ratio = dist / pinchRef.current.dist;
-        zoomRef.current = Math.max(
-          ZOOM_MIN,
-          Math.min(ZOOM_MAX, pinchRef.current.zoom * ratio),
-        );
-      }
-      return;
-    }
     if (!draggingRef.current || e.touches.length !== 1) return;
     const t = e.touches[0];
     if (!t) return;
@@ -456,7 +398,6 @@ export function AtlasField({ field }: { field: Field }) {
 
   const onTouchEnd = useCallback(() => {
     draggingRef.current = false;
-    pinchRef.current = null;
   }, []);
 
   return (

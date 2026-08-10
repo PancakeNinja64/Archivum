@@ -7,7 +7,20 @@
  */
 
 import { coverageColorVar } from '@/lib/utils';
+import { solidForPlatform } from './geometry';
+import { transform } from './projection';
 import type { AtlasEdgeKind, ProjectedNode } from './types';
+
+/** Coverage arc — matches CoverageGauge and AtlasReticle. */
+const ARC_SWEEP = 1.5 * Math.PI;
+const ARC_START = -0.75 * Math.PI;
+
+const LOD_LO = 5.5;
+const LOD_HI = 7;
+
+const BAND_LOW = 40;
+const BAND_HIGH = 75;
+const BAND_WINDOW = 8;
 
 export interface Tokens {
   background: string;
@@ -96,6 +109,27 @@ export function bandColor(scope: HTMLElement, coverageTotal: number): string {
   return resolveVar(scope, coverageColorVar(coverageTotal));
 }
 
+/**
+ * Band colour with ±8-point interpolation at thresholds 40 and 75.
+ * Geometry carries the precise figure; colour stays a coarse three-way read.
+ */
+export function nodeColor(coverageTotal: number, tokens: Tokens): string {
+  const lowStart = BAND_LOW - BAND_WINDOW;
+  const lowEnd = BAND_LOW + BAND_WINDOW;
+  const highStart = BAND_HIGH - BAND_WINDOW;
+  const highEnd = BAND_HIGH + BAND_WINDOW;
+
+  if (coverageTotal <= lowStart) return tokens.asserted;
+  if (coverageTotal >= highEnd) return tokens.verified;
+  if (coverageTotal < lowEnd) {
+    const t = (coverageTotal - lowStart) / (lowEnd - lowStart);
+    return fog(tokens.asserted, tokens.inferred, t, 1);
+  }
+  if (coverageTotal < highStart) return tokens.inferred;
+  const t = (coverageTotal - highStart) / (highEnd - highStart);
+  return fog(tokens.inferred, tokens.verified, t, 1);
+}
+
 /* ------------------------------------------------------------------ */
 /* Ground reference                                                    */
 /* ------------------------------------------------------------------ */
@@ -153,16 +187,23 @@ export function drawEdge(
 }
 
 /* ------------------------------------------------------------------ */
-/* Nodes                                                               */
+/* Nodes — wireframe solids + coverage arc at small LOD                */
 /* ------------------------------------------------------------------ */
 
-/**
- * Glyph geometry mirrors EvidenceDot exactly, so the same encoding reads the
- * same way on a dataset page and in the field:
- *   extensive = filled disc · partial = half-filled ring · minimal = hollow ring
- * Colour is never the only channel.
- */
-export function drawNode(
+function nodeAlpha(p: ProjectedNode, opacityScale: number, entrance: number): number {
+  return (0.18 + 0.82 * p.depth) * opacityScale * entrance;
+}
+
+function nodeFogColor(color: string, p: ProjectedNode, tokens: Tokens, alpha: number): string {
+  return fog(color, tokens.background, (1 - p.depth) * 0.55, alpha);
+}
+
+function nodeLineWidth(p: ProjectedNode): number {
+  return 0.6 + 0.9 * p.depth;
+}
+
+/** Small LOD glyph: 270° coverage arc matching CoverageGauge convention. */
+function drawCoverageArcGlyph(
   ctx: CanvasRenderingContext2D,
   p: ProjectedNode,
   color: string,
@@ -170,40 +211,141 @@ export function drawNode(
   opacityScale: number,
   entrance: number,
 ) {
-  const alpha = (0.18 + 0.82 * p.depth) * opacityScale * entrance;
+  const alpha = nodeAlpha(p, opacityScale, entrance);
   if (alpha <= 0.01) return;
 
-  const c = fog(color, tokens.background, (1 - p.depth) * 0.55, alpha);
-  const w = 0.6 + 0.9 * p.depth;
-  const r = p.sr;
-  const band = p.node.coverageBand;
+  const c = nodeFogColor(color, p, tokens, alpha);
+  const w = nodeLineWidth(p);
+  const r = p.sr * 0.9;
+  const coverage = p.node.coverageTotal;
 
   ctx.save();
-  if (band === 'extensive') {
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.arc(p.sx, p.sy, r, ARC_START, ARC_START + ARC_SWEEP);
+  ctx.strokeStyle = withAlpha(tokens.border, alpha * 0.85);
+  ctx.lineWidth = w * 1.1;
+  ctx.stroke();
+
+  const filled = ARC_SWEEP * (coverage / 100);
+  if (filled > 0.001) {
     ctx.beginPath();
-    ctx.arc(p.sx, p.sy, r, 0, Math.PI * 2);
-    ctx.fillStyle = c;
-    ctx.fill();
-  } else if (band === 'partial') {
-    ctx.beginPath();
-    ctx.arc(p.sx, p.sy, r * 0.9, 0, Math.PI * 2);
+    ctx.arc(p.sx, p.sy, r, ARC_START, ARC_START + filled);
     ctx.strokeStyle = c;
     ctx.lineWidth = w * 1.1;
     ctx.stroke();
-    // Right half filled — the half dot.
+  }
+  ctx.lineCap = 'butt';
+  ctx.restore();
+}
+
+function projectLocalVertex(
+  local: { x: number; y: number; z: number },
+  p: ProjectedNode,
+  theta: number,
+  tiltX: number,
+  tiltY: number,
+): { sx: number; sy: number; z: number } {
+  const r = transform(local, theta, tiltX, tiltY);
+  return {
+    sx: p.sx + r.x * p.sr,
+    sy: p.sy + r.y * p.sr,
+    z: r.z,
+  };
+}
+
+function drawWireframeSolid(
+  ctx: CanvasRenderingContext2D,
+  p: ProjectedNode,
+  color: string,
+  tokens: Tokens,
+  opacityScale: number,
+  entrance: number,
+  theta: number,
+  tiltX: number,
+  tiltY: number,
+) {
+  const baseAlpha = nodeAlpha(p, opacityScale, entrance);
+  if (baseAlpha <= 0.01) return;
+
+  const solid = solidForPlatform(p.node.platform);
+  const projectedVerts = solid.vertices.map((v) =>
+    projectLocalVertex(v, p, theta, tiltX, tiltY),
+  );
+
+  const exact = (p.node.coverageTotal / 100) * solid.edges.length;
+  const full = Math.floor(exact);
+  const frac = exact - full;
+  const w = nodeLineWidth(p);
+
+  ctx.save();
+
+  for (let i = 0; i < solid.edges.length; i++) {
+    if (i > full) break;
+
+    const [a, b] = solid.edges[i];
+    const va = projectedVerts[a];
+    const vb = projectedVerts[b];
+    const midZ = (va.z + vb.z) / 2;
+    const edgeAlpha = baseAlpha * (midZ < 0 ? 0.45 : 1);
+    if (edgeAlpha <= 0.01) continue;
+
+    const c = nodeFogColor(color, p, tokens, edgeAlpha);
+
     ctx.beginPath();
-    ctx.arc(p.sx, p.sy, r * 0.9, -Math.PI / 2, Math.PI / 2);
-    ctx.closePath();
-    ctx.fillStyle = c;
-    ctx.fill();
-  } else {
-    ctx.beginPath();
-    ctx.arc(p.sx, p.sy, r * 0.9, 0, Math.PI * 2);
+    ctx.moveTo(va.sx, va.sy);
+
+    if (i < full) {
+      ctx.lineTo(vb.sx, vb.sy);
+    } else if (frac > 0.001) {
+      ctx.lineTo(va.sx + (vb.sx - va.sx) * frac, va.sy + (vb.sy - va.sy) * frac);
+    }
+
     ctx.strokeStyle = c;
-    ctx.lineWidth = w * 1.25;
+    ctx.lineWidth = w;
     ctx.stroke();
   }
+
+  const dotAlpha = baseAlpha * 1.1;
+  if (dotAlpha > 0.02) {
+    const dotColor = nodeFogColor(color, p, tokens, Math.min(1, dotAlpha));
+    for (const v of projectedVerts) {
+      ctx.beginPath();
+      ctx.arc(v.sx, v.sy, 0.8, 0, Math.PI * 2);
+      ctx.fillStyle = dotColor;
+      ctx.fill();
+    }
+  }
+
   ctx.restore();
+}
+
+export function drawNode(
+  ctx: CanvasRenderingContext2D,
+  p: ProjectedNode,
+  color: string,
+  tokens: Tokens,
+  opacityScale: number,
+  entrance: number,
+  theta: number,
+  tiltX: number,
+  tiltY: number,
+) {
+  const sr = p.sr;
+
+  if (sr < LOD_LO) {
+    drawCoverageArcGlyph(ctx, p, color, tokens, opacityScale, entrance);
+    return;
+  }
+
+  if (sr >= LOD_HI) {
+    drawWireframeSolid(ctx, p, color, tokens, opacityScale, entrance, theta, tiltX, tiltY);
+    return;
+  }
+
+  const t = (sr - LOD_LO) / (LOD_HI - LOD_LO);
+  drawCoverageArcGlyph(ctx, p, color, tokens, opacityScale * (1 - t), entrance);
+  drawWireframeSolid(ctx, p, color, tokens, opacityScale * t, entrance, theta, tiltX, tiltY);
 }
 
 export function drawLabel(
@@ -211,13 +353,17 @@ export function drawLabel(
   p: ProjectedNode,
   tokens: Tokens,
   alpha: number,
+  withCoverage = false,
 ) {
   if (alpha <= 0.02) return;
+  const text = withCoverage
+    ? `${p.node.name} · ${p.node.coverageTotal}%`
+    : p.node.name;
   ctx.save();
   ctx.font = '10px var(--font-geist-mono), ui-monospace, monospace';
   ctx.textAlign = 'left';
   ctx.textBaseline = 'middle';
   ctx.fillStyle = withAlpha(tokens.mutedForeground, alpha);
-  ctx.fillText(p.node.name, p.sx + p.sr + 6, p.sy);
+  ctx.fillText(text, p.sx + p.sr + 6, p.sy);
   ctx.restore();
 }
