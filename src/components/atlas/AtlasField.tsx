@@ -36,6 +36,8 @@ const SPARSE_THRESHOLD = 24;
 
 const RING_RADII = [230, 370, 510];
 const RING_ALPHA = [0.3, 0.21, 0.14];
+/** Shift field centre right on desktop so the node cloud clears the headline column. */
+const FIELD_OFFSET_X = 192;
 
 export function AtlasField({ field }: { field: Field }) {
   const reduce = useReducedMotion();
@@ -209,7 +211,7 @@ export function AtlasField({ field }: { field: Field }) {
         thetaRef.current += ROTATION_PER_MS * dt;
       }
 
-      const cx = w / 2;
+      const cx = w / 2 + (isMobile ? 0 : FIELD_OFFSET_X);
       // Lift the field: the ground plane sits below the cloud, so a centred
       // origin leaves the composition bottom-heavy.
       const cy = h / 2 - 30;
@@ -305,12 +307,8 @@ export function AtlasField({ field }: { field: Field }) {
           opts.tiltY,
         );
 
-        const labelled =
-          sparse ||
-          slug === active ||
-          (p.node.coverageTotal >= 75 && p.depth > 0.6);
-        if (labelled && !isMobile) {
-          const a = (slug === active ? 0.95 : 0.35 + 0.4 * p.depth) * entrance * Math.min(1, scale);
+        if (slug === active && !isMobile) {
+          const a = 0.95 * entrance * Math.min(1, scale);
           drawLabel(ctx, p, tokens, a, true);
         }
       }

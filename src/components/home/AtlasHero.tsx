@@ -68,7 +68,7 @@ export function AtlasHero({
         </div>
       </div>
 
-      <div className="relative z-10 mx-auto mt-12 w-full max-w-6xl px-6 pb-10 md:px-8">
+      <div className="relative z-10 mx-auto mt-8 w-full max-w-6xl px-6 pb-8 md:px-8">
         <AtlasLegend />
       </div>
     </section>
