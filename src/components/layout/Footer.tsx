@@ -9,6 +9,7 @@ const columns = [
       { label: "Explore datasets", href: "/explore/" },
       { label: "Coverage methodology", href: "/docs/#methodology" },
       { label: "Lineage", href: "/docs/#lineage" },
+      { label: "Delisted records", href: "/delisted/" },
       { label: "Pricing", href: "/pricing/" },
     ],
   },

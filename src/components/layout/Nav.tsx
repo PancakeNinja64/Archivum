@@ -10,6 +10,7 @@ import { AuthMenu } from "./AuthMenu";
 
 const links = [
   { href: "/explore/", label: "Explore" },
+  { href: "/delisted/", label: "Graveyard" },
   { href: "/docs/", label: "Docs" },
   { href: "/pricing/", label: "Pricing" },
   { href: "/publish/", label: "Publish" },
