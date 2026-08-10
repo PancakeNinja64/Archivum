@@ -5,7 +5,7 @@ import { DELISTED_FIXTURE } from "@/lib/graveyard/fixture";
 import { END_STATE_LABEL, lightAge } from "@/lib/graveyard/types";
 
 export const metadata: Metadata = {
-  title: "Delisted records",
+  title: "Graveyard",
   description:
     "Records no longer retrievable from their source, kept as they stood at the final successful check — end state, licensing, and documentation coverage at last observation.",
 };
@@ -34,16 +34,13 @@ function NoScriptRegister() {
 export default function DelistedPage() {
   return (
     <>
-      {/* Server-rendered. useSearchParams pushes the whole client subtree to the
-          Suspense fallback during SSR, so anything that must reach a crawler —
-          the h1, the subhead, the record list — has to live out here. */}
       <div className="mx-auto max-w-7xl px-6 pt-28 md:px-8">
         <header className="max-w-2xl">
           <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
             Delisted · no longer retrievable
           </p>
           <h1 className="mt-5 font-serif text-4xl leading-[1.08] tracking-[-0.03em] text-foreground md:text-5xl">
-            What the ecosystem stopped keeping.
+            Work in progress
           </h1>
           <p className="mt-4 text-base leading-relaxed text-muted-foreground">
             Models trained on these records are still in production. Each entry is the record
