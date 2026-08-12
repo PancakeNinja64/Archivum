@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Logo, LogoMark } from "./Logo";
-import { ThemeToggle } from "../ThemeToggle";
 import { WaitlistModal } from "./WaitlistModal";
 import { AuthMenu } from "./AuthMenu";
 
@@ -84,7 +83,6 @@ export function Nav() {
           </ul>
 
           <div className="flex items-center gap-2">
-            <ThemeToggle />
             <AuthMenu />
             {process.env.NEXT_PUBLIC_DATA_SOURCE !== "supabase" && (
               <button

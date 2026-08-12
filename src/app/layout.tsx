@@ -30,11 +30,8 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#FBFCFD" },
-    { media: "(prefers-color-scheme: dark)", color: "#0A0E14" },
-  ],
-  colorScheme: "dark light",
+  themeColor: "#0A0E14",
+  colorScheme: "dark",
 };
 
 /** Footer catalog count tracks the live index. */
@@ -45,7 +42,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${GeistSans.variable} ${GeistMono.variable} h-full antialiased`}
+      className={`dark ${GeistSans.variable} ${GeistMono.variable} h-full antialiased`}
     >
       <body className="paper-grain flex min-h-full flex-col bg-background text-foreground">
         <ThemeProvider>

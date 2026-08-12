@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import type { CoverageSectionKey } from "@/lib/coverage/rules";
 import { RISK_PROBES } from "@/lib/home/specimen";
+import { SpecimenLattice } from "./SpecimenLattice";
 import { SpecimenReport } from "./SpecimenReport";
 import { Button } from "../ui/Button";
 
@@ -21,6 +22,7 @@ const EASE = [0.22, 1, 0.36, 1] as const;
  */
 export function Problem() {
   const reduce = useReducedMotion();
+  const sectionRef = useRef<HTMLElement | null>(null);
   const [active, setActive] = useState<CoverageSectionKey | null>(null);
 
   const rise = (i: number) => ({
@@ -31,7 +33,7 @@ export function Problem() {
   });
 
   return (
-    <section className="border-t border-border py-24 md:py-32">
+    <section ref={sectionRef} className="border-t border-border py-24 md:py-32">
       <div className="mx-auto grid max-w-6xl gap-14 px-6 md:px-8 lg:grid-cols-[1.05fr_1fr] lg:gap-20">
         <div>
           <motion.p
@@ -123,7 +125,17 @@ export function Problem() {
           transition={{ duration: 0.55, ease: EASE }}
           className="lg:sticky lg:top-24 lg:self-start"
         >
-          <SpecimenReport activeSection={active} />
+          {/* Desktop: the cage is the visible object, the list stays in the DOM
+              as the SSR, keyboard and screen-reader surface. Below lg the
+              lattice is not mounted at all — a cage you cannot hover is
+              decoration, and 28 rows are the better small-screen object. */}
+          <div className="hidden lg:block">
+            <SpecimenLattice sectionRef={sectionRef} activeSection={active} />
+            <SpecimenReport activeSection={active} visual="sr" />
+          </div>
+          <div className="lg:hidden">
+            <SpecimenReport activeSection={active} />
+          </div>
         </motion.div>
       </div>
     </section>

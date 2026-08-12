@@ -24,7 +24,18 @@ const EASE = [0.22, 1, 0.36, 1] as const;
  * Labels and methods are imported from COVERAGE_CHECKS and the score comes from
  * computeCoverage(), so this cannot drift from the published methodology.
  */
-export function SpecimenReport({ activeSection }: { activeSection: CoverageSectionKey | null }) {
+export function SpecimenReport({
+  activeSection,
+  visual = 'list',
+}: {
+  activeSection: CoverageSectionKey | null;
+  /**
+   * 'sr' renders the same content visually hidden. The lattice is aria-hidden
+   * decoration, so this stays the SSR surface, the keyboard path and the
+   * screen-reader path even when the canvas is the visible element.
+   */
+  visual?: 'list' | 'sr';
+}) {
   const reduce = useReducedMotion();
   const ref = useRef<HTMLDivElement | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -90,6 +101,38 @@ export function SpecimenReport({ activeSection }: { activeSection: CoverageSecti
 
   const sectionScore = (key: CoverageSectionKey) =>
     result.sections.find((s) => s.key === key);
+
+  if (visual === 'sr') {
+    return (
+      <div className="sr-only">
+        <p>
+          Example record, composite. {documented} of {COVERAGE_CHECKS.length} checks documented,{' '}
+          {result.total}% coverage.
+        </p>
+        <ul>
+          {grouped.map(({ key, meta, checks }) => (
+            <li key={key}>
+              {meta.label} — {sectionScore(key)?.documented} of {sectionScore(key)?.applicable}{' '}
+              documented
+              <ul>
+                {checks.map((check) => {
+                  const outcome = (SPECIMEN_DETAIL[check.id] ?? 'not_found') as
+                    | 'documented'
+                    | 'reported'
+                    | 'not_found';
+                  return (
+                    <li key={check.id}>
+                      {check.label} — {RESULT_PRESENTATION[outcome].label} — {check.method}
+                    </li>
+                  );
+                })}
+              </ul>
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
+  }
 
   return (
     <div ref={ref} className="border border-border-strong bg-surface/40">
