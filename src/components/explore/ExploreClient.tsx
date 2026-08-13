@@ -12,8 +12,11 @@ import { CardSkeleton, Skeleton } from "../ui/Skeleton";
 type View = "grid" | "table";
 type Sort = NonNullable<DatasetFilters["sort"]>;
 
+const PAGE_SIZE = 24;
+
 function readFilters(sp: URLSearchParams): DatasetFilters & { view: View } {
   const list = (k: string) => sp.get(k)?.split(",").filter(Boolean) ?? [];
+  const page = Math.max(1, Number(sp.get("page")) || 1);
   return {
     query: sp.get("q") ?? undefined,
     platform: list("platform") as Platform[],
@@ -23,6 +26,8 @@ function readFilters(sp: URLSearchParams): DatasetFilters & { view: View } {
     commercialOnly: sp.get("commercial") === "1",
     minCoverage: Number(sp.get("min")) || 0,
     sort: (sp.get("sort") as Sort) || "coverage",
+    page,
+    pageSize: PAGE_SIZE,
     view: (sp.get("view") as View) || "grid",
   };
 }
@@ -41,12 +46,14 @@ export function ExploreClient() {
   const debounce = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const setParam = useCallback(
-    (patch: Record<string, string | null>) => {
+    (patch: Record<string, string | null>, opts?: { keepPage?: boolean }) => {
       const next = new URLSearchParams(sp.toString());
       for (const [k, v] of Object.entries(patch)) {
         if (v === null || v === "") next.delete(k);
         else next.set(k, v);
       }
+      // Filter/sort/search changes start over at page 1 so counts and rows stay aligned.
+      if (!opts?.keepPage && !("page" in patch)) next.delete("page");
       router.replace(`${pathname}?${next.toString()}`, { scroll: false });
     },
     [sp, router, pathname]
@@ -63,8 +70,13 @@ export function ExploreClient() {
   useEffect(() => {
     let live = true;
     setRows(null);
-    getDatasets({ ...f, pageSize: 24 }).then((r) => {
+    getDatasets(f).then((r) => {
       if (!live) return;
+      const maxPage = Math.max(1, Math.ceil(r.total / PAGE_SIZE));
+      if ((f.page ?? 1) > maxPage) {
+        setParam({ page: maxPage <= 1 ? null : String(maxPage) }, { keepPage: true });
+        return;
+      }
       setRows(r.items);
       setTotal(r.total);
     });
@@ -77,6 +89,11 @@ export function ExploreClient() {
     clearTimeout(debounce.current);
     debounce.current = setTimeout(() => setParam({ q: v || null }), 250);
   };
+
+  const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const page = Math.min(f.page ?? 1, pageCount);
+  const from = total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
+  const to = Math.min(page * PAGE_SIZE, total);
 
   const activeChips: { label: string; clear: () => void }[] = [
     ...(f.query ? [{ label: `"${f.query}"`, clear: () => { setQ(""); setParam({ q: null }); } }] : []),
@@ -256,7 +273,11 @@ export function ExploreClient() {
           )}
 
           <p className="tnum mt-5 font-mono text-[12px] text-muted-foreground" aria-live="polite">
-            {rows === null ? "Searching…" : `${total} dataset${total === 1 ? "" : "s"}`}
+            {rows === null
+              ? "Searching…"
+              : total === 0
+                ? "0 datasets"
+                : `Showing ${from}–${to} of ${total} dataset${total === 1 ? "" : "s"}`}
           </p>
 
           {/* Results */}
@@ -307,6 +328,30 @@ export function ExploreClient() {
                 </tbody>
               </table>
             </div>
+          )}
+
+          {rows !== null && total > PAGE_SIZE && (
+            <nav className="mt-8 flex flex-wrap items-center justify-between gap-3" aria-label="Results pages">
+              <button
+                type="button"
+                disabled={page <= 1}
+                onClick={() => setParam({ page: page <= 2 ? null : String(page - 1) }, { keepPage: true })}
+                className="rounded-md border border-border px-3 py-2 text-sm text-foreground disabled:cursor-not-allowed disabled:opacity-40 hover:enabled:border-accent-strong/50"
+              >
+                Previous
+              </button>
+              <p className="tnum font-mono text-[12px] text-muted-foreground">
+                Page {page} of {pageCount}
+              </p>
+              <button
+                type="button"
+                disabled={page >= pageCount}
+                onClick={() => setParam({ page: String(page + 1) }, { keepPage: true })}
+                className="rounded-md border border-border px-3 py-2 text-sm text-foreground disabled:cursor-not-allowed disabled:opacity-40 hover:enabled:border-accent-strong/50"
+              >
+                Next
+              </button>
+            </nav>
           )}
 
           {rows !== null && rows.length === 0 && (
