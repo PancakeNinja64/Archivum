@@ -4,6 +4,7 @@ import { computeCoverage } from '../coverage/rules';
 import { adapterFor } from '../sources';
 import { metadataHash, slugFor } from './hash';
 import { attributionRequired, shareAlikeRequired } from '../sources/spdx';
+import { recordIngestOutcome } from '../probe/recordIngestOutcome';
 
 export interface IngestSummary {
   status: 'created' | 'updated' | 'unchanged' | 'skipped' | 'failed';
@@ -49,7 +50,7 @@ export async function ingestOne(
     // Existing row (by permanent slug first, then by source identity for renames).
     const slug = slugFor(platform, sourceId);
     const { data: existing } = await db.from('datasets')
-      .select('id, slug, metadata_hash, license_spdx, coverage_total, status, metadata')
+      .select('id, slug, metadata_hash, license_spdx, coverage_total, status, metadata, end_state')
       .or(`slug.eq.${slug},and(platform.eq.${platform},source_identifier.eq.${sourceId})`)
       .maybeSingle();
 
@@ -57,11 +58,17 @@ export async function ingestOne(
     const result = await adapter.ingest(sourceId, { etag: priorEtag ?? null });
 
     if (result.outcome === 'not_modified' && existing) {
-      await db.from('datasets').update({ coverage_checked_at: new Date().toISOString() }).eq('id', existing.id);
+      const seenAt = new Date().toISOString();
+      await db.from('datasets').update({
+        coverage_checked_at: seenAt, last_confirmed: seenAt, consecutive_failures: 0,
+      }).eq('id', existing.id);
       await closeRun('skipped', 'Source reports no change since the last check (ETag match).', existing.id);
       return { status: 'unchanged', slug: existing.slug, datasetId: existing.id };
     }
     if (result.outcome === 'not_found' || result.outcome === 'gated' || result.outcome === 'error') {
+      if (existing?.id) {
+        await recordIngestOutcome(db, existing.id, result.outcome, result.detail ?? null);
+      }
       await closeRun(result.outcome === 'error' ? 'failed' : 'skipped', result.detail, existing?.id);
       return { status: result.outcome === 'error' ? 'failed' : 'skipped', detail: result.detail };
     }
@@ -96,6 +103,9 @@ export async function ingestOne(
       coverage_detail: detail,
       coverage_version: coverage.version,
       coverage_checked_at: nowIso,
+      checks_at_last_check: detail,
+      last_confirmed: nowIso,
+      consecutive_failures: 0,
       lineage: result.lineage,
       schema_fields: record.schemaFields,
       sample_records: record.sampleRecords,
@@ -177,6 +187,9 @@ export async function ingestOne(
     if (upErr) {
       await closeRun('failed', `Update failed: ${upErr.message}`, existing.id);
       return { status: 'failed', detail: upErr.message };
+    }
+    if (existing.end_state) {
+      await recordIngestOutcome(db, existing.id, 'ok', 'Retrieved again during ingest.', existing.end_state as string);
     }
     const { count } = await db.from('dataset_versions')
       .select('id', { count: 'exact', head: true }).eq('dataset_id', existing.id);
