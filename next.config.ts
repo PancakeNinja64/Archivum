@@ -7,6 +7,9 @@ const nextConfig: NextConfig = {
    * all require a server.
    */
   trailingSlash: true,
+
+  // Produces a minimal production server for Docker deployments.
+  output: "standalone",
 };
 
 export default nextConfig;
