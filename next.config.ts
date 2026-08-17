@@ -9,7 +9,7 @@ const nextConfig: NextConfig = {
   trailingSlash: true,
 
   // Produces a minimal production server for Docker deployments.
-  output: "standalone",
+  output: process.env.VERCEL ? undefined : "standalone",
 };
 
 export default nextConfig;
