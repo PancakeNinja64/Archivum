@@ -1,4 +1,5 @@
 import 'server-only';
+import { getCachedJson, setCachedJson } from '../cache';
 import type { CoverageDetail, CheckResult } from '../coverage/rules';
 import type { LineageGraph, LineageNode, Modality, SchemaField } from '../types';
 import { serverConfig } from '../config';
@@ -9,6 +10,7 @@ import type { IngestFetchResult, NormalisedRecord, SourceAdapter } from './types
 
 const HF = 'https://huggingface.co';
 const DS_SERVER = 'https://datasets-server.huggingface.co';
+const HUGGINGFACE_CACHE_TTL_SECONDS = 60 * 60;
 
 type J = Record<string, unknown>;
 const j = (v: unknown): J => (v && typeof v === 'object' ? (v as J) : {});
@@ -47,7 +49,22 @@ export const huggingface: SourceAdapter = {
 
   async ingest(id, { etag }): Promise<IngestFetchResult> {
     const token = serverConfig.hfToken;
+    const cacheKey = `huggingface:ingest:${id.toLowerCase()}`;
 
+    let cached: IngestFetchResult | null = null;
+    
+    try {
+      cached = await getCachedJson<IngestFetchResult>(cacheKey);
+    } catch (error) {
+      console.warn(`[redis] GET failed for ${cacheKey}`, error);
+    }
+    
+    if (cached) {
+      console.log(`[redis] HIT ${cacheKey}`);
+      return cached;
+    }
+    
+    console.log(`[redis] MISS ${cacheKey}`);
     // 1. The dataset record itself. ?full=true includes siblings (the file list).
     const main = await sourceFetch(`${HF}/api/datasets/${id}?full=true`, { token, etag });
     if (main.notModified) return { outcome: 'not_modified', etag: main.etag };
@@ -209,7 +226,26 @@ export const huggingface: SourceAdapter = {
     };
 
     const lineage = deriveLineage(record, coverage);
-    return { outcome: 'ok', record, coverage, lineage, etag: main.etag };
+
+    const result: IngestFetchResult = {
+      outcome: 'ok',
+      record,
+      coverage,
+      lineage,
+      etag: main.etag,
+    };
+
+    try {
+      await setCachedJson(
+        cacheKey,
+        result,
+        HUGGINGFACE_CACHE_TTL_SECONDS,
+      );
+    } catch (error) {
+      console.warn(`[redis] SET failed for ${cacheKey}`, error);
+    }
+
+    return result;
   },
 };
 
@@ -298,5 +334,10 @@ export function deriveLineage(record: NormalisedRecord, coverage: CoverageDetail
   const undocumentedStages = allStages.filter((s) => !stagesPresent.has(s));
   const completeness = Math.round(((allStages.length - undocumentedStages.length) / allStages.length) * 100);
 
-  return { nodes, edges, completeness, undocumentedStages };
+  return {
+    nodes,
+    edges,
+    undocumentedStages,
+    completeness,
+  };
 }
