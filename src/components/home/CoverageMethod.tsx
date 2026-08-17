@@ -33,8 +33,7 @@ export function CoverageMethod() {
   const [n, setN] = useState(reduce ? COMPOSITE : 0);
 
   useEffect(() => {
-    if (!inView) return;
-    if (reduce) { setN(COMPOSITE); return; }
+    if (!inView || reduce) return;
     let raf = 0;
     const t0 = performance.now();
     const tick = (t: number) => {
@@ -53,12 +52,13 @@ export function CoverageMethod() {
   const arc = C * 0.75;
 
   // Cumulative segments so hovering a section highlights its contribution
-  let acc = 0;
-  const segs = SECTIONS.map((f) => {
+  const segs = SECTIONS.map((f, i) => {
     const frac = (f.score * COVERAGE_SECTIONS[f.key].weight) / 100 / 100;
-    const seg = { key: f.key, start: acc, len: frac };
-    acc += frac;
-    return seg;
+    const start = SECTIONS.slice(0, i).reduce(
+      (sum, prev) => sum + (prev.score * COVERAGE_SECTIONS[prev.key].weight) / 100 / 100,
+      0,
+    );
+    return { key: f.key, start, len: frac };
   });
 
   return (

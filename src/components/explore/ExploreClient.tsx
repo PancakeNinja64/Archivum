@@ -43,6 +43,11 @@ export function ExploreClient() {
   const [facets, setFacets] = useState<Facets | null>(null);
   const [drawer, setDrawer] = useState(false);
   const [q, setQ] = useState(f.query ?? "");
+  const [prevQuery, setPrevQuery] = useState(f.query);
+  if (f.query !== prevQuery) {
+    setPrevQuery(f.query);
+    setQ(f.query ?? "");
+  }
   const debounce = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const setParam = useCallback(
@@ -65,11 +70,9 @@ export function ExploreClient() {
   };
 
   useEffect(() => { getFacets().then(setFacets); }, []);
-  useEffect(() => { setQ(f.query ?? ""); }, [f.query]);
 
   useEffect(() => {
     let live = true;
-    setRows(null);
     getDatasets(f).then((r) => {
       if (!live) return;
       const maxPage = Math.max(1, Math.ceil(r.total / PAGE_SIZE));

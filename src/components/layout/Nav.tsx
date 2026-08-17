@@ -21,6 +21,11 @@ export function Nav() {
   const [open, setOpen] = useState(false);
   const [waitlist, setWaitlist] = useState(false);
   const pathname = usePathname();
+  const [prevPath, setPrevPath] = useState(pathname);
+  if (pathname !== prevPath) {
+    setPrevPath(pathname);
+    setOpen(false);
+  }
   const drawerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -29,9 +34,6 @@ export function Nav() {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
-
-  // Close the drawer on route change.
-  useEffect(() => setOpen(false), [pathname]);
 
   // Escape closes; focus moves into the drawer while open.
   useEffect(() => {

@@ -8,10 +8,10 @@ const live = process.env.NEXT_PUBLIC_DATA_SOURCE === "supabase";
 
 /** Sign-in / account control for the nav. Renders nothing in mock mode. */
 export function AuthMenu({ variant = "desktop" }: { variant?: "desktop" | "mobile" }) {
-  const [email, setEmail] = useState<string | null | undefined>(undefined);
+  const [email, setEmail] = useState<string | null | undefined>(live ? undefined : null);
 
   useEffect(() => {
-    if (!live) { setEmail(null); return; }
+    if (!live) return;
     const sb = supabaseBrowser();
     sb.auth.getUser().then(({ data }) => setEmail(data?.user?.email ?? null));
     const { data: sub } = sb.auth.onAuthStateChange((_e, session) => {

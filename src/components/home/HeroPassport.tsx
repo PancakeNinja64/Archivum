@@ -29,8 +29,9 @@ function LineageStrip({ band }: { band: DatasetSummary["coverageBand"] }) {
 
 function CountUp({ to, color, run }: { to: number; color: string; run: boolean }) {
   const [n, setN] = useState(run ? 0 : to);
+  if (!run && n !== to) setN(to);
   useEffect(() => {
-    if (!run) { setN(to); return; }
+    if (!run) return;
     let raf = 0;
     const t0 = performance.now();
     const tick = (t: number) => {

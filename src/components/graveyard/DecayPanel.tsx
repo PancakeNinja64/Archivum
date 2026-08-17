@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { EvidenceDot } from '@/components/dataset/EvidenceDot';
 import { COVERAGE_CHECKS, COVERAGE_SECTIONS, type CoverageSectionKey } from '@/lib/coverage/rules';
@@ -36,10 +36,11 @@ function Row({ label, value }: { label: string; value: string }) {
 
 /** Observation timeline. Four marks, one rule, no ornament. */
 function Timeline({ record }: { record: DelistedRecord }) {
+  const [now] = useState(() => Date.now());
   const age = lightAge(record.lastConfirmed);
   const start = Date.parse(record.firstObserved);
   const end = Date.parse(record.lastConfirmed);
-  const span = Math.max(1, Date.now() - start);
+  const span = Math.max(1, now - start);
   const confirmedAt = Math.min(96, Math.max(4, ((end - start) / span) * 100));
 
   return (

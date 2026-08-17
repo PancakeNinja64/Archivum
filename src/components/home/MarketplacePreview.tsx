@@ -2,7 +2,7 @@
 
 import { motion, useReducedMotion } from "framer-motion";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { getDatasets } from "@/lib/api/client";
 import type { DatasetSummary, Modality } from "@/lib/types";
 import { DatasetCard } from "../dataset/DatasetCard";
@@ -25,7 +25,6 @@ export function MarketplacePreview({
 
   useEffect(() => {
     let live = true;
-    setRows(null);
     getDatasets({
       modality: modality ? [modality] : undefined,
       minCoverage: minScore || undefined,

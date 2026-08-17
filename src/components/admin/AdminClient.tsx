@@ -53,7 +53,23 @@ export function AdminClient({ adminEmail }: { adminEmail: string }) {
     }
   }, []);
 
-  useEffect(() => { reload(); }, [reload]);
+  useEffect(() => {
+    let live = true;
+    (async () => {
+      try {
+        const res = await fetch("/api/admin/overview");
+        if (!res.ok || !live) return;
+        const body = await res.json();
+        if (!live) return;
+        setRows((body.datasets ?? []) as Row[]);
+        setRuns((body.runs ?? []) as Run[]);
+        setCorrections((body.corrections ?? []) as Correction[]);
+      } catch {
+        // leave the current state; the console shows stale data rather than crashing
+      }
+    })();
+    return () => { live = false; };
+  }, []);
 
   async function importOne() {
     if (!identifier.trim()) return;

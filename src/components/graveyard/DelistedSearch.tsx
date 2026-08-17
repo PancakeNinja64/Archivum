@@ -31,11 +31,14 @@ export function DelistedSearch({
   onSelect: (slug: string) => void;
 }) {
   const [draft, setDraft] = useState(query);
+  const [prevQuery, setPrevQuery] = useState(query);
+  if (query !== prevQuery) {
+    setPrevQuery(query);
+    setDraft(query);
+  }
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
   const boxRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => setDraft(query), [query]);
 
   useEffect(() => {
     const t = setTimeout(() => {
