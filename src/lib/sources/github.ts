@@ -1,4 +1,5 @@
 import 'server-only';
+import { getCachedJson, setCachedJson } from '../cache';
 import type { CoverageDetail, CheckResult } from '../coverage/rules';
 import type { SchemaField } from '../types';
 import { serverConfig } from '../config';
@@ -9,6 +10,7 @@ import type { IngestFetchResult, NormalisedRecord, SourceAdapter } from './types
 import { deriveLineage } from './huggingface';
 
 const GH = 'https://api.github.com';
+const GITHUB_CACHE_TTL_SECONDS = 60 * 60;
 
 type J = Record<string, unknown>;
 const j = (v: unknown): J => (v && typeof v === 'object' ? (v as J) : {});
@@ -28,7 +30,23 @@ export const github: SourceAdapter = {
 
   async ingest(id, { etag }): Promise<IngestFetchResult> {
     const token = serverConfig.githubToken;
+    const cacheKey = `github:ingest:${id.toLowerCase()}`;
+  
+    let cached: IngestFetchResult | null = null;
 
+    try {
+      cached = await getCachedJson<IngestFetchResult>(cacheKey);
+    } catch (error) {
+      console.warn(`[redis] GET failed for ${cacheKey}`, error);
+    }
+
+    if (cached) {
+      console.log(`[redis] HIT ${cacheKey}`);
+      return cached;
+    }
+
+    console.log(`[redis] MISS ${cacheKey}`);
+  
     const main = await sourceFetch(`${GH}/repos/${id}`, { token, etag });
     if (main.notModified) return { outcome: 'not_modified', etag: main.etag };
     if (main.status === 404) return { outcome: 'not_found', detail: `GitHub returned 404 for ${id} — renamed, removed, or private.` };
@@ -174,6 +192,24 @@ export const github: SourceAdapter = {
       if (node.stage === 'source' && forkParent) node.url = `https://github.com/${forkParent}`;
     }
 
-    return { outcome: 'ok', record, coverage, lineage, etag: main.etag };
+    const result: IngestFetchResult = {
+      outcome: 'ok',
+      record,
+      coverage,
+      lineage,
+      etag: main.etag,
+    };
+    
+    try {
+      await setCachedJson(
+        cacheKey,
+        result,
+        GITHUB_CACHE_TTL_SECONDS,
+      );
+    } catch (error) {
+      console.warn(`[redis] SET failed for ${cacheKey}`, error);
+    }
+    
+    return result;
   },
 };
