@@ -30,12 +30,12 @@ const steps = [
 function SearchVisual({ items }: { items: DatasetSummary[] }) {
   return (
     <div>
-      <div className="flex items-center gap-2 rounded-md border border-border bg-background px-3 py-2.5">
+      <div className="flex items-center gap-2 rounded-md border border-border bg-background px-3 py-2.5 max-sm:min-w-0">
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden className="text-muted-foreground">
           <circle cx="6" cy="6" r="4.4" stroke="currentColor" strokeWidth="1.4" />
           <path d="M9.5 9.5 12.5 12.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
         </svg>
-        <span className="font-mono text-[13px] text-foreground">medical text, commercial use</span>
+        <span className="font-mono text-[13px] text-foreground max-sm:min-w-0 max-sm:truncate">medical text, commercial use</span>
         <span className="caret text-accent" aria-hidden />
       </div>
       <ul className="mt-3 space-y-2">
@@ -45,7 +45,7 @@ function SearchVisual({ items }: { items: DatasetSummary[] }) {
             initial={{ opacity: 0, x: -8 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.15 + i * 0.09 }}
-            className="flex items-center justify-between rounded-md border border-border bg-background px-3.5 py-2.5"
+            className="flex items-center justify-between rounded-md border border-border bg-background px-3.5 py-2.5 max-sm:min-w-0 max-sm:gap-3"
           >
             <div className="min-w-0">
               <p className="truncate text-[13px] text-foreground">{d.name}</p>
@@ -93,7 +93,7 @@ function VerifyVisual({ d }: { d: DatasetSummary }) {
           </li>
         ))}
       </ul>
-      <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
+      <div className="mt-3 flex items-center justify-between border-t border-border pt-3 max-sm:flex-wrap max-sm:gap-2">
         <EvidenceDot label="documented" />
         <span className="font-mono text-[10px] text-muted-foreground">lineage 100% documented</span>
       </div>
@@ -117,7 +117,7 @@ function IntegrateVisual({ d }: { d: DatasetSummary }) {
         <span className="h-2 w-2 rounded-full bg-white/15" />
         <span className="ml-2 font-mono text-[10px] text-white/40">archivum · zsh</span>
       </div>
-      <div className="p-4 font-mono leading-relaxed">
+      <div className="p-4 font-mono leading-relaxed max-sm:overflow-x-auto max-sm:p-3">
         {lines.map((l, i) => (
           <motion.div
             key={i}
@@ -128,7 +128,7 @@ function IntegrateVisual({ d }: { d: DatasetSummary }) {
           >
             {l.c === "cmd" && <span className="text-white/40">$</span>}
             {l.c === "ok" && <span>✓</span>}
-            <span>{l.t}</span>
+            <span className="max-sm:min-w-0 max-sm:break-all">{l.t}</span>
           </motion.div>
         ))}
         <div className="flex gap-2"><span className="text-white/40">$</span><span className="caret" aria-hidden /></div>
@@ -152,9 +152,9 @@ export function HowItWorks({ featured }: { featured: DatasetSummary[] }) {
   if (!strong) {
     return (
       <section className="border-t border-border bg-surface/40">
-        <div className="mx-auto max-w-6xl px-6 py-24 md:px-8 md:py-32">
+        <div className="mx-auto max-w-6xl px-6 py-16 sm:py-24 md:px-8 md:py-32">
           <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-muted-foreground">How it works</p>
-          <h2 className="mt-5 max-w-2xl font-serif text-4xl leading-[1.1] tracking-[-0.03em] text-accent md:text-5xl">
+          <h2 className="mt-5 max-w-2xl font-serif text-[2.1rem] leading-[1.1] tracking-[-0.03em] text-accent sm:text-4xl md:text-5xl">
             From search to verified in an afternoon.
           </h2>
           <p className="mt-6 max-w-xl text-[15px] leading-relaxed text-muted-foreground">
@@ -173,7 +173,7 @@ export function HowItWorks({ featured }: { featured: DatasetSummary[] }) {
 
   // Reduced motion / mobile fallback: stacked steps, each with its visual.
   const stacked = (
-    <div className="space-y-16 lg:hidden">
+    <div className="space-y-12 sm:space-y-16 lg:hidden">
       {steps.map((s, i) => (
         <div key={s.n}>
           <p className="font-mono text-[12px] text-accent-strong dark:text-accent">{s.n}</p>
@@ -188,14 +188,14 @@ export function HowItWorks({ featured }: { featured: DatasetSummary[] }) {
 
   return (
     <section className="border-t border-border bg-surface/40">
-      <div className="mx-auto max-w-6xl px-6 pt-24 md:px-8 md:pt-32">
+      <div className="mx-auto max-w-6xl px-6 pt-16 sm:pt-24 md:px-8 md:pt-32">
         <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-muted-foreground">How it works</p>
-        <h2 className="mt-5 max-w-2xl font-serif text-4xl leading-[1.1] tracking-[-0.03em] text-accent md:text-5xl">
+        <h2 className="mt-5 max-w-2xl font-serif text-[2.1rem] leading-[1.1] tracking-[-0.03em] text-accent sm:text-4xl md:text-5xl">
           From search to verified in an afternoon.
         </h2>
       </div>
 
-      <div className="mx-auto max-w-6xl px-6 pb-24 pt-14 md:px-8 md:pb-32 lg:hidden">{stacked}</div>
+      <div className="mx-auto max-w-6xl px-6 pb-16 pt-10 sm:pb-24 sm:pt-14 md:px-8 md:pb-32 lg:hidden">{stacked}</div>
 
       {/* Sticky pinned scene — desktop */}
       <div ref={ref} className="relative mx-auto hidden max-w-6xl px-6 md:px-8 lg:block" style={{ height: "260vh" }}>

@@ -3,10 +3,10 @@ const targets = ["LlamaIndex", "LangChain", "Pinecone", "Qdrant", "Weaviate", "C
 
 export function Integrations() {
   return (
-    <section className="border-t border-border py-24 md:py-32">
+    <section className="border-t border-border py-16 sm:py-24 md:py-32">
       <div className="mx-auto max-w-6xl px-6 md:px-8">
         <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-muted-foreground">Integrations</p>
-        <h2 className="mt-5 max-w-2xl font-serif text-4xl leading-[1.1] tracking-[-0.03em] text-accent md:text-5xl">
+        <h2 className="mt-5 max-w-2xl font-serif text-[2.1rem] leading-[1.1] tracking-[-0.03em] text-accent sm:text-4xl md:text-5xl">
           Archivum sits under the stack you already use.
         </h2>
         <p className="mt-6 max-w-xl text-base leading-relaxed text-muted-foreground md:text-lg">
@@ -14,10 +14,10 @@ export function Integrations() {
           with provenance attached, into the tools you already build with.
         </p>
 
-        <div className="mt-14 grid items-stretch gap-6 lg:grid-cols-[1fr_auto_1fr]">
+        <div className="mt-10 grid items-stretch gap-6 sm:mt-14 lg:grid-cols-[1fr_auto_1fr]">
           <div>
             <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Sources indexed</p>
-            <ul className="mt-3 grid grid-cols-2 gap-px overflow-hidden rounded-[10px] border border-border bg-border">
+            <ul className="mt-3 grid grid-cols-1 gap-px overflow-hidden rounded-[10px] border border-border bg-border sm:grid-cols-2">
               {sources.map((s) => (
                 <li key={s} className="flex min-h-[64px] items-center justify-center bg-surface px-3 py-4 text-center text-sm text-muted-foreground">
                   {s}
@@ -27,12 +27,12 @@ export function Integrations() {
           </div>
 
           <div className="flex items-center justify-center lg:flex-col">
-            <div className="flex items-center gap-3 rounded-[10px] border border-accent-soft bg-accent-wash px-6 py-4 lg:flex-col lg:py-8">
+            <div className="flex items-center gap-3 rounded-[10px] border border-accent-soft bg-accent-wash px-6 py-4 max-sm:max-w-full max-sm:flex-col max-sm:px-4 lg:flex-col lg:py-8">
               <svg viewBox="0 0 40 14" className="h-3 w-8 text-accent lg:rotate-90" aria-hidden>
                 <path d="M2 10 Q20 4 38 10" fill="none" stroke="currentColor" strokeWidth="1.5" />
                 <path d="M34 7l4 3-5 1" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-              <p className="whitespace-nowrap font-mono text-[11px] uppercase tracking-[0.16em] text-accent-strong dark:text-accent">
+              <p className="whitespace-nowrap font-mono text-[11px] uppercase tracking-[0.16em] text-accent-strong max-sm:whitespace-normal max-sm:text-center dark:text-accent">
                 Archivum · index, record, trace
               </p>
               <svg viewBox="0 0 40 14" className="h-3 w-8 text-accent lg:rotate-90" aria-hidden>
@@ -44,7 +44,7 @@ export function Integrations() {
 
           <div>
             <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Export targets</p>
-            <ul className="mt-3 grid grid-cols-2 gap-px overflow-hidden rounded-[10px] border border-border bg-border">
+            <ul className="mt-3 grid grid-cols-1 gap-px overflow-hidden rounded-[10px] border border-border bg-border sm:grid-cols-2">
               {targets.map((s) => (
                 <li key={s} className="flex min-h-[64px] items-center justify-center bg-surface px-3 py-4 text-center text-sm text-muted-foreground">
                   {s}

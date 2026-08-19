@@ -8,14 +8,14 @@ export function DatasetCard({ d }: { d: DatasetSummary }) {
   return (
     <Link
       href={`/datasets/${d.slug}/`}
-      className="group flex flex-col rounded-[10px] border border-border bg-surface p-5 transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-accent-strong/50"
+      className="group flex flex-col rounded-[10px] border border-border bg-surface p-5 transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-accent-strong/50 max-sm:min-w-0"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="truncate font-mono text-[11px] text-muted-foreground">
             {d.publisher} · {platformLabel[d.platform]}
           </p>
-          <h3 className="mt-2 text-base font-medium tracking-[-0.01em] text-foreground group-hover:text-accent-strong dark:group-hover:text-accent">
+          <h3 className="mt-2 text-base font-medium tracking-[-0.01em] text-foreground group-hover:text-accent-strong max-sm:break-words dark:group-hover:text-accent">
             {d.name}
           </h3>
         </div>

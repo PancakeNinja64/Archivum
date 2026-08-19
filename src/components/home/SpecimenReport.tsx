@@ -87,15 +87,20 @@ export function SpecimenReport({
   }, [inView, reduce, result.total]);
 
   /* Without this a probe can highlight a section that is scrolled out of the
-     card, and clicking it looks like nothing happened. */
+     card, and clicking it looks like nothing happened. On phones the list is
+     not internally scrolled, so the page brings the section into view instead. */
   useEffect(() => {
     if (!activeSection || !scrollRef.current) return;
     const el = scrollRef.current.querySelector(`[data-section="${activeSection}"]`);
-    if (el instanceof HTMLElement) {
+    if (!(el instanceof HTMLElement)) return;
+    const behavior = reduce ? 'auto' : 'smooth';
+    if (scrollRef.current.scrollHeight > scrollRef.current.clientHeight + 1) {
       scrollRef.current.scrollTo({
         top: el.offsetTop - scrollRef.current.offsetTop,
-        behavior: reduce ? 'auto' : 'smooth',
+        behavior,
       });
+    } else {
+      el.scrollIntoView({ block: 'nearest', behavior });
     }
   }, [activeSection, reduce]);
 
@@ -136,7 +141,7 @@ export function SpecimenReport({
 
   return (
     <div ref={ref} className="border border-border-strong bg-surface/40">
-      <div className="flex items-baseline justify-between gap-4 border-b border-border px-5 py-3.5">
+      <div className="flex flex-col gap-1 border-b border-border px-4 py-3.5 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4 sm:px-5">
         <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
           Example record · composite
         </span>
@@ -145,7 +150,7 @@ export function SpecimenReport({
         </span>
       </div>
 
-      <div ref={scrollRef} className="max-h-[24rem] overflow-y-auto md:max-h-[30rem]">
+      <div ref={scrollRef} className="max-h-none overflow-visible sm:max-h-[24rem] sm:overflow-y-auto md:max-h-[30rem]">
         {grouped.map(({ key, meta, checks }) => {
           const s = sectionScore(key);
           const dimmed = activeSection !== null && activeSection !== key;
@@ -165,7 +170,7 @@ export function SpecimenReport({
                   )
                 }
                 aria-expanded={open}
-                className="flex w-full items-baseline justify-between gap-4 border-b border-border px-5 py-2.5 text-left md:pointer-events-none"
+                className="flex w-full flex-col items-start gap-0.5 border-b border-border px-4 py-3 text-left sm:flex-row sm:items-baseline sm:justify-between sm:gap-4 sm:px-5 sm:py-2.5 md:pointer-events-none"
               >
                 <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
                   {meta.label}
@@ -188,7 +193,7 @@ export function SpecimenReport({
                       <li key={check.id}>
                         <div
                           tabIndex={0}
-                          className="group relative flex items-center gap-3 border-b border-border/60 px-5 py-1.5 focus:outline-none focus-visible:bg-surface-elevated"
+                          className="group relative flex items-start gap-3 border-b border-border/60 px-4 py-2.5 focus:outline-none focus-visible:bg-surface-elevated sm:items-center sm:px-5 sm:py-1.5"
                         >
                           <motion.span
                             initial={reduce ? false : { opacity: 0 }}
@@ -228,35 +233,42 @@ export function SpecimenReport({
                           </motion.span>
 
                           <span className="relative min-w-0 flex-1">
-                            <motion.span
-                              initial={reduce ? false : { opacity: 0 }}
-                              animate={inView || reduce ? { opacity: 1 } : {}}
-                              transition={{ duration: 0.22, delay, ease: EASE }}
-                              className={`block truncate text-[13px] ${
-                                pres.struck
-                                  ? 'text-muted-foreground/45'
-                                  : 'text-foreground/90'
-                              }`}
-                            >
-                              {check.label}
-                            </motion.span>
-                            {pres.struck && (
+                            <span className="relative block">
                               <motion.span
-                                aria-hidden
-                                initial={reduce ? false : { scaleX: 0 }}
-                                animate={inView || reduce ? { scaleX: 1 } : {}}
-                                transition={{ duration: 0.18, delay: delay + 0.08, ease: EASE }}
-                                style={{ originX: 0 }}
-                                className="absolute left-0 top-1/2 h-px w-full bg-muted-foreground/45"
-                              />
-                            )}
+                                initial={reduce ? false : { opacity: 0 }}
+                                animate={inView || reduce ? { opacity: 1 } : {}}
+                                transition={{ duration: 0.22, delay, ease: EASE }}
+                                className={`block text-[13px] leading-snug sm:truncate ${
+                                  pres.struck
+                                    ? 'text-muted-foreground/45'
+                                    : 'text-foreground/90'
+                                }`}
+                              >
+                                {check.label}
+                              </motion.span>
+                              {pres.struck && (
+                                <motion.span
+                                  aria-hidden
+                                  initial={reduce ? false : { scaleX: 0 }}
+                                  animate={inView || reduce ? { scaleX: 1 } : {}}
+                                  transition={{ duration: 0.18, delay: delay + 0.08, ease: EASE }}
+                                  style={{ originX: 0 }}
+                                  className="absolute left-0 top-1/2 h-px w-full bg-muted-foreground/45"
+                                />
+                              )}
+                            </span>
+                            <span aria-hidden className="mt-1 block font-mono text-[11px] leading-relaxed text-muted-foreground sm:hidden">
+                              <span style={{ color: `var(${pres.token})` }}>{pres.label}</span>
+                              {' — '}
+                              {check.method}
+                            </span>
                           </span>
 
                           <span className="sr-only">{pres.label}. </span>
                           <span className="sr-only">{check.method}</span>
 
-                          {/* Method sentence — the credibility argument. */}
-                          <span className="pointer-events-none absolute left-5 right-5 top-full z-10 hidden rounded-none border border-border-strong bg-surface-elevated px-3 py-2 font-mono text-[10px] leading-relaxed text-muted-foreground group-hover:block group-focus-visible:block">
+                          {/* Method sentence — the credibility argument. Hover/focus on sm+. */}
+                          <span className="pointer-events-none absolute left-5 right-5 top-full z-10 hidden rounded-none border border-border-strong bg-surface-elevated px-3 py-2 font-mono text-[10px] leading-relaxed text-muted-foreground sm:group-hover:block sm:group-focus-visible:block">
                             <span style={{ color: `var(${pres.token})` }}>{pres.label}</span> —{' '}
                             {check.method}
                           </span>
@@ -271,14 +283,14 @@ export function SpecimenReport({
         })}
       </div>
 
-      <div className="flex items-baseline justify-between gap-4 border-t border-border px-5 py-4">
+      <div className="flex items-baseline justify-between gap-4 border-t border-border px-4 py-4 sm:px-5">
         <span className="tnum font-mono text-[11px] text-muted-foreground">
           {documented} of {COVERAGE_CHECKS.length} documented
         </span>
         <span className="tnum font-mono text-[15px] text-tier-asserted">{shown}%</span>
       </div>
 
-      <p className="border-t border-border px-5 py-3 font-mono text-[9px] leading-relaxed text-muted-foreground">
+      <p className="border-t border-border px-4 py-3 font-mono text-[11px] leading-relaxed text-muted-foreground sm:px-5 sm:text-[9px]">
         A composite representative of a typical source card, not a specific published dataset.
         Scored with the same method as the catalog.
       </p>

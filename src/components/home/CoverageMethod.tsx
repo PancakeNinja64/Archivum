@@ -62,10 +62,10 @@ export function CoverageMethod() {
   });
 
   return (
-    <section id="coverage" className="border-t border-border py-24 md:py-32">
+    <section id="coverage" className="border-t border-border py-16 sm:py-24 md:py-32">
       <div className="mx-auto max-w-6xl px-6 md:px-8">
         <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-muted-foreground">Documentation Coverage</p>
-        <h2 className="mt-5 max-w-2xl font-serif text-4xl leading-[1.1] tracking-[-0.03em] text-accent md:text-5xl">
+        <h2 className="mt-5 max-w-2xl font-serif text-[2.1rem] leading-[1.1] tracking-[-0.03em] text-accent sm:text-4xl md:text-5xl">
           A number anyone can recompute.
         </h2>
         <p className="mt-6 max-w-xl text-base leading-relaxed text-muted-foreground md:text-lg">
@@ -74,14 +74,14 @@ export function CoverageMethod() {
           each answering &ldquo;was this present in the record?&rdquo;, never &ldquo;is this dataset good?&rdquo;
         </p>
 
-        <div ref={ref} className="mt-14 grid gap-14 lg:grid-cols-[auto_1fr] lg:gap-20">
+        <div ref={ref} className="mt-10 grid gap-10 sm:mt-14 sm:gap-14 lg:grid-cols-[auto_1fr] lg:gap-20">
           {/* The gauge */}
           <motion.div
             layoutId="coverage-gauge"
-            className="flex flex-col items-center self-start"
+            className="flex flex-col items-center self-start max-sm:self-center"
           >
-            <div className="relative" style={{ width: box, height: box }}>
-              <svg width={box} height={box} viewBox={`0 0 ${box} ${box}`} className="-rotate-[135deg]" aria-hidden>
+            <div className="relative h-[240px] w-[240px] max-sm:h-[184px] max-sm:w-[184px]">
+              <svg width={box} height={box} viewBox={`0 0 ${box} ${box}`} className="-rotate-[135deg] max-sm:h-full max-sm:w-full" aria-hidden>
                 <circle cx={box / 2} cy={box / 2} r={r} fill="none" stroke="var(--border)" strokeWidth={stroke}
                   strokeDasharray={`${arc} ${C}`} strokeLinecap="round" />
                 {segs.map((s) => (
@@ -99,11 +99,11 @@ export function CoverageMethod() {
                 ))}
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="tnum font-mono text-7xl text-accent" role="img" aria-label={`Documentation Coverage ${COMPOSITE} percent`}>{n}</span>
+                <span className="tnum font-mono text-7xl text-accent max-sm:text-[2.75rem]" role="img" aria-label={`Documentation Coverage ${COMPOSITE} percent`}>{n}</span>
                 <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">% documented</span>
               </div>
             </div>
-            <p className="mt-3 font-mono text-[11px] text-muted-foreground">coverage rules v1.0 · example record</p>
+            <p className="mt-3 font-mono text-[11px] text-muted-foreground max-sm:px-2 max-sm:text-center">coverage rules v1.0 · example record</p>
           </motion.div>
 
           {/* The four sections */}
@@ -118,7 +118,7 @@ export function CoverageMethod() {
                 tabIndex={0}
                 className="rounded-md outline-none"
               >
-                <div className="flex items-baseline justify-between gap-4">
+                <div className="flex items-baseline justify-between gap-4 max-sm:flex-wrap">
                   <span className="text-[15px] text-foreground">{COVERAGE_SECTIONS[f.key].label}</span>
                   <span className="tnum shrink-0 font-mono text-[12px] text-muted-foreground">
                     7 checks · <span className="text-foreground">{f.score}%</span>
@@ -140,7 +140,7 @@ export function CoverageMethod() {
         </div>
 
         {/* The evidence labels */}
-        <div className="mt-16 grid gap-px overflow-hidden rounded-[10px] border border-border bg-border sm:grid-cols-3">
+        <div className="mt-10 grid gap-px overflow-hidden rounded-[10px] border border-border bg-border sm:mt-16 sm:grid-cols-3">
           {LABELS.map((t) => (
             <div key={t.label} className="bg-surface p-6 md:p-7">
               <EvidenceDot label={t.label} />
