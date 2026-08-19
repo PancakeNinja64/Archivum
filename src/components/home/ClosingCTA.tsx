@@ -15,7 +15,7 @@ export function ClosingCTA() {
   };
 
   return (
-    <section className="border-y border-border bg-accent-wash/60 py-24 dark:bg-accent-wash md:py-28">
+    <section className="border-y border-border bg-accent-wash/60 py-16 dark:bg-accent-wash sm:py-24 md:py-28">
       <div className="mx-auto max-w-2xl px-6 text-center md:px-8">
         {/* The arc resolves into a final documented node */}
         <svg viewBox="0 0 120 22" className="mx-auto h-5 w-28 text-accent" aria-hidden>
@@ -23,7 +23,7 @@ export function ClosingCTA() {
           <circle cx="60" cy="10.5" r="4.5" fill="var(--surface)" stroke="var(--tier-verified)" strokeWidth="1.5" />
           <circle cx="60" cy="10.5" r="2" fill="var(--tier-verified)" />
         </svg>
-        <h2 className="mt-6 font-serif text-4xl leading-[1.1] tracking-[-0.03em] text-accent md:text-5xl">
+        <h2 className="mt-6 font-serif text-[2.1rem] leading-[1.1] tracking-[-0.03em] text-accent sm:text-4xl md:text-5xl">
           Know what your model learned from.
         </h2>
         <p className="mx-auto mt-5 max-w-md text-base leading-relaxed text-muted-foreground">
@@ -35,7 +35,7 @@ export function ClosingCTA() {
           <p className="mt-8 font-mono text-sm text-verified">You&rsquo;re on the list.</p>
         ) : (
           <>
-            <div className="mx-auto mt-8 flex max-w-sm gap-2">
+            <div className="mx-auto mt-8 flex max-w-sm gap-2 max-sm:w-full max-sm:flex-col">
               <input
                 type="email"
                 inputMode="email"
@@ -46,9 +46,9 @@ export function ClosingCTA() {
                 onKeyDown={(e) => e.key === "Enter" && submit()}
                 aria-label="Email address"
                 aria-invalid={state === "error"}
-                className="min-w-0 flex-1 rounded-md border border-border bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground"
+                className="min-w-0 flex-1 rounded-md border border-border bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground max-sm:min-h-11 max-sm:w-full max-sm:py-3"
               />
-              <button type="button" onClick={submit} className="rounded-md bg-accent-strong px-4 py-2.5 text-sm font-medium text-white transition-all duration-200 hover:-translate-y-0.5 hover:opacity-90">
+              <button type="button" onClick={submit} className="rounded-md bg-accent-strong px-4 py-2.5 text-sm font-medium text-white transition-all duration-200 hover:-translate-y-0.5 hover:opacity-90 max-sm:min-h-11 max-sm:w-full max-sm:py-3">
                 Join the waitlist
               </button>
             </div>

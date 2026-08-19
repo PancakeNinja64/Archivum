@@ -33,9 +33,9 @@ export function Problem() {
   });
 
   return (
-    <section ref={sectionRef} className="border-t border-border py-24 md:py-32">
-      <div className="mx-auto grid max-w-6xl gap-14 px-6 md:px-8 lg:grid-cols-[1.05fr_1fr] lg:gap-20">
-        <div>
+    <section ref={sectionRef} className="border-t border-border py-16 sm:py-24 md:py-32">
+      <div className="mx-auto grid max-w-6xl gap-10 px-6 sm:gap-14 md:px-8 lg:grid-cols-[1.05fr_1fr] lg:gap-20">
+        <div className="max-sm:min-w-0">
           <motion.p
             {...rise(0)}
             className="font-mono text-[11px] uppercase tracking-[0.22em] text-muted-foreground"
@@ -44,7 +44,7 @@ export function Problem() {
           </motion.p>
           <motion.h2
             {...rise(1)}
-            className="mt-5 font-serif text-4xl leading-[1.1] tracking-[-0.03em] text-accent md:text-5xl"
+            className="mt-5 font-serif text-[2.1rem] leading-[1.1] tracking-[-0.03em] text-accent sm:text-4xl md:text-5xl"
           >
             You wouldn&rsquo;t buy a used car without the history report.
           </motion.h2>
@@ -105,14 +105,16 @@ export function Problem() {
 
           <motion.p
             {...rise(6)}
-            className="mt-9 border-l-2 border-accent pl-5 font-serif text-2xl italic leading-snug text-accent-strong dark:text-accent md:text-[1.7rem]"
+            className="mt-9 border-l-2 border-accent pl-5 font-serif text-[1.35rem] italic leading-snug text-accent-strong dark:text-accent sm:text-2xl md:text-[1.7rem]"
           >
             Archivum is the history report.
           </motion.p>
 
-          <motion.div {...rise(7)} className="mt-9 flex flex-wrap items-center gap-3">
-            <Button href="/explore/">Run these checks on any dataset</Button>
-            <Button href="/docs/#methodology" variant="secondary">
+          <motion.div {...rise(7)} className="mt-9 flex flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+            <Button href="/explore/" className="max-sm:min-h-11 max-sm:w-full">
+              Run these checks on any dataset
+            </Button>
+            <Button href="/docs/#methodology" variant="secondary" className="max-sm:min-h-11 max-sm:w-full">
               How the checks work
             </Button>
           </motion.div>
@@ -123,7 +125,7 @@ export function Problem() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-80px" }}
           transition={{ duration: 0.55, ease: EASE }}
-          className="lg:sticky lg:top-24 lg:self-start"
+          className="max-sm:min-w-0 lg:sticky lg:top-24 lg:self-start"
         >
           {/* Desktop: the cage is the visible object, the list stays in the DOM
               as the SSR, keyboard and screen-reader surface. Below lg the
