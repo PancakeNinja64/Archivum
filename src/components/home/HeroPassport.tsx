@@ -1,6 +1,6 @@
 "use client";
 
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useEffect, useState } from "react";
 import type { DatasetSummary } from "@/lib/types";
 import { fmtInt, fmtRelative, platformLabel, coverageColorVar, bandLabel, commercialUseLabel } from "@/lib/utils";

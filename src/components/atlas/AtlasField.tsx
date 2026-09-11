@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useReducedMotion } from 'framer-motion';
+import { useReducedMotion } from 'motion/react';
 import {
   BASE_TILT_X,
   groundRing,

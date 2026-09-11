@@ -1,6 +1,6 @@
 "use client";
 
-import { AnimatePresence, motion, useReducedMotion, useScroll, useMotionValueEvent } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion, useScroll, useMotionValueEvent } from "motion/react";
 import { useRef, useState } from "react";
 import type { DatasetSummary } from "@/lib/types";
 import { platformLabel, coverageColorVar } from "@/lib/utils";

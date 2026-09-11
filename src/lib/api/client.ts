@@ -11,7 +11,8 @@ import type {
 import * as mock from './adapters/mock';
 import * as supabase from './adapters/supabase';
 
-const adapter = process.env.NEXT_PUBLIC_DATA_SOURCE === 'supabase' ? supabase : mock;
+export const dataMode: 'catalog' | 'illustrative' = process.env.NEXT_PUBLIC_DATA_SOURCE === 'supabase' ? 'catalog' : 'illustrative';
+const adapter = dataMode === 'catalog' ? supabase : mock;
 
 export const getDatasets = (f?: DatasetFilters): Promise<Paginated<DatasetSummary>> => adapter.getDatasets(f);
 export const getDataset = (slug: string): Promise<Dataset | null> => adapter.getDataset(slug);
@@ -22,3 +23,5 @@ export const getFeatured = (n?: number): Promise<DatasetSummary[]> => adapter.ge
 export const getRelated = (slug: string): Promise<DatasetSummary[]> => adapter.getRelated(slug);
 export const getActivity = (): Promise<ActivityEvent[]> => adapter.getActivity();
 export const getWatchlist = (): Promise<WatchedDataset[]> => adapter.getWatchlist();
+
+export { getPreservedRecords } from '../graveyard/provider';

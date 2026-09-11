@@ -4,7 +4,7 @@ export const dynamic = "force-static";
 
 export default function robots(): MetadataRoute.Robots {
   return {
-    rules: { userAgent: "*", allow: "/" },
-    sitemap: "https://archivum.example/sitemap.xml",
+    rules: process.env.NEXT_PUBLIC_DATA_SOURCE === "supabase" ? { userAgent: "*", allow: "/", disallow: ["/dashboard/", "/admin/", "/api/"] } : { userAgent: "*", disallow: "/" },
+    sitemap: "https://archivum.tech/sitemap.xml",
   };
 }

@@ -1,213 +1,97 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getAllSlugs, getDataset, getRelated } from "@/lib/api/client";
-import { fmtBytes, fmtDate, fmtInt, fmtRelative, platformLabel, commercialUseLabel } from "@/lib/utils";
+import { dataMode, getAllSlugs, getDataset, getRelated } from "@/lib/api/client";
+import { fmtBytes, fmtDate, fmtInt, platformLabel, commercialUseLabel, safeExternalUrl } from "@/lib/utils";
 import { CoveragePanel } from "@/components/dataset/CoveragePanel";
 import { LineageGraph } from "@/components/dataset/LineageGraph";
 import { VersionList } from "@/components/dataset/VersionList";
 import { SchemaTable } from "@/components/dataset/SchemaTable";
 import { SampleRecords } from "@/components/dataset/SampleRecords";
-import { IntegrateTabs } from "@/components/dataset/IntegrateTabs";
 import { DatasetCard } from "@/components/dataset/DatasetCard";
 import { EvidenceDot } from "@/components/dataset/EvidenceDot";
 import { CorrectionModal } from "@/components/dataset/CorrectionModal";
 import { SaveButton } from "@/components/dataset/SaveButton";
+import { PassportNav } from "@/components/dataset/PassportNav";
+import { BrandMark } from "@/components/brand/Brand";
+import { ContentHash } from "@/components/dataset/ContentHash";
+import styles from "@/components/dataset/passport.module.css";
 
-/** Rebuilt hourly; datasets published after the last build still render on demand. */
 export const revalidate = 3600;
 export const dynamicParams = true;
-
 export async function generateStaticParams() {
-  try {
-    const slugs = await getAllSlugs();
-    return slugs.map((slug) => ({ slug }));
-  } catch {
-    return []; // empty catalog or unreachable database — every page renders on demand
-  }
+  try { return (await getAllSlugs()).map((slug) => ({ slug })); }
+  catch { return []; }
 }
-
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const d = await getDataset(slug).catch(() => null);
-  if (!d) return { title: "Dataset not found" };
-  return {
-    title: d.name,
-    description: `${d.description} Documentation Coverage ${d.coverageTotal}% · ${d.license.spdx} · ${d.publisher}.`,
-  };
+  try {
+    const d = await getDataset(slug);
+    if (!d) return { title: "Dataset not found" };
+    return { title: d.name, description: `${d.description.slice(0, 160)} · ${d.publisher}.` };
+  } catch { return { title: "Dataset record temporarily unavailable" }; }
 }
-
-const sections = [
-  { id: "coverage", label: "Coverage" },
-  { id: "lineage", label: "Lineage" },
-  { id: "license", label: "License" },
-  { id: "versions", label: "Versions" },
-  { id: "schema", label: "Schema" },
-  { id: "samples", label: "Samples" },
-  { id: "integrate", label: "Integrate" },
-];
-
 export default async function DatasetPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const d = await getDataset(slug).catch(() => null);
+  // A failed request reaches error.tsx. Only a successful absent lookup is a 404.
+  const d = await getDataset(slug);
   if (!d) notFound();
   const related = await getRelated(slug).catch(() => []);
-
-  const stats: [string, string][] = [
-    ["Records", d.sizeRows ? fmtInt(d.sizeRows) : "Not stated"],
-    ["Size", d.sizeBytes ? fmtBytes(d.sizeBytes) : "Not stated"],
-    ["Languages", d.languages.length ? d.languages.join(", ") : "Not stated"],
-    ["Modality", d.modality],
-    ["Domain", d.domain.length ? d.domain.join(", ") : "—"],
-    ["First published", fmtDate(d.firstPublished)],
-    ["Last checked", fmtDate(d.coverageCheckedAt)],
-    ["Platform", platformLabel[d.platform] ?? d.platform],
+  const sourceUrl = dataMode === "catalog" ? safeExternalUrl(d.platformUrl) : null;
+  const missing = Object.values(d.coverageDetail).filter((result) => result === "not_found").length;
+  const stats = [
+    ["Records", fmtInt(d.sizeRows)], ["Download size", fmtBytes(d.sizeBytes)],
+    ["Modality", d.modality], ["Languages", d.languages.join(", ") || "Not stated"],
+    ["Domain", d.domain.join(", ") || "Not stated"], ["First published at source", fmtDate(d.firstPublished)],
+    ["Source updated", fmtDate(d.lastUpdated)], ["Archivum checked", fmtDate(d.coverageCheckedAt)],
   ];
-
-  return (
-    <div className="mx-auto max-w-6xl px-6 pb-24 pt-28 md:px-8">
-      {/* Header */}
-      <nav aria-label="Breadcrumb" className="font-mono text-[12px] text-muted-foreground">
-        <Link href="/explore/" className="hover:text-foreground">Explore</Link>
-        <span className="mx-2">/</span>
-        <span>{d.publisher}</span>
-      </nav>
-      <div className="mt-4 flex flex-wrap items-start justify-between gap-6">
-        <div className="min-w-0 max-w-2xl">
-          <h1 className="font-serif text-4xl leading-[1.08] tracking-[-0.03em] text-accent md:text-5xl">{d.name}</h1>
-          <p className="tnum mt-3 font-mono text-[12px] text-muted-foreground">
-            {d.version} · updated {fmtRelative(d.lastUpdated)} · {platformLabel[d.platform]}{d.contentHash ? ` · ${d.contentHash}` : ""}
-          </p>
-          <p className="mt-4 text-base leading-relaxed text-muted-foreground">{d.description}</p>
-          <p className="mt-3"><CorrectionModal datasetSlug={d.slug} datasetName={d.name} /></p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <a
-            href={d.platformUrl}
-            rel="noopener noreferrer"
-            className="rounded-md bg-accent-strong px-4 py-2.5 text-sm font-medium text-white transition-all duration-200 hover:-translate-y-0.5 hover:opacity-90"
-          >
-            View at source
-          </a>
-          <SaveButton datasetSlug={d.slug} />
-        </div>
+  return <article className={styles.page}>
+    <nav aria-label="Breadcrumb" className={styles.breadcrumb}><Link href="/explore/">← Explore</Link><span aria-hidden>/</span><span>Dataset record</span></nav>
+    {dataMode === "illustrative" && <div className={styles.demo}><strong>Illustrative record</strong><span>This demonstration uses fictional sample metadata to show the experience. It is not a current source report.</span></div>}
+    <header className={styles.hero}>
+      <div>
+        <p className={styles.kicker}><BrandMark /> DATASET PASSPORT</p><h1 className={styles.title}>{d.name}</h1>
+        <div className={styles.identity}><strong>{d.publisher}</strong><span>{platformLabel[d.platform]}</span><span>{d.version}</span></div>
+        <div className={styles.description}><p>{d.description || "A source description is not available for this record."}</p>{d.description && <details><summary>Read source description</summary><div className={styles.fullDescription}>{d.description}</div></details>}</div>
+        <div className={styles.correction}><CorrectionModal datasetSlug={d.slug} datasetName={d.name} /></div>
       </div>
-
-      {/* In-page nav */}
-      <nav aria-label="Sections" className="sticky top-16 z-30 -mx-6 mt-8 overflow-x-auto border-y border-border bg-background/85 px-6 backdrop-blur-md md:-mx-8 md:px-8">
-        <ul className="flex gap-6 whitespace-nowrap py-3">
-          {sections.map((s) => (
-            <li key={s.id}>
-              <a href={`#${s.id}`} className="font-mono text-[12px] text-muted-foreground hover:text-foreground">{s.label}</a>
-            </li>
-          ))}
-        </ul>
-      </nav>
-
-      {/* Documentation Coverage */}
-      <section id="coverage" className="scroll-mt-32 pt-10">
-        <CoveragePanel d={d} />
-      </section>
-
-      {/* Overview stats */}
-      <section className="pt-10">
-        <div className="grid grid-cols-2 gap-px overflow-hidden rounded-[10px] border border-border bg-border sm:grid-cols-4">
-          {stats.map(([k, v]) => (
-            <div key={k} className="bg-surface p-4">
-              <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">{k}</p>
-              <p className="tnum mt-1.5 font-mono text-[15px] text-foreground">{v}</p>
-            </div>
-          ))}
+      <aside className={styles.factPanel} aria-label="Record facts and actions">
+        <div className={styles.coverage}><p className={styles.coverageValue}>{d.coverageTotal}<span>%</span></p><p className={styles.coverageCaption}>Documentation<br />coverage</p></div>
+        <dl className={styles.facts}><div><dt>Declared licence</dt><dd>{d.license.spdx}</dd></div><div><dt>Source</dt><dd>{platformLabel[d.platform]}</dd></div><div><dt>Last checked</dt><dd>{fmtDate(d.coverageCheckedAt)}</dd></div></dl>
+        <div className={styles.actions}>{sourceUrl ? <a className={styles.primary} href={sourceUrl} rel="noopener noreferrer">View at source <span aria-hidden>&nbsp;↗</span></a> : <span className={styles.caption}>{dataMode === "illustrative" ? "Illustrative source · no external link" : "Source link unavailable"}</span>}<SaveButton datasetSlug={d.slug} /></div>
+        <p className={styles.caption}>Measures documentation completeness. It does not assess dataset quality or grant permission to use it.</p>
+      </aside>
+    </header>
+    <PassportNav />
+    <section id="overview" className={styles.section}>
+      <div className={styles.sectionHeader}><span className={styles.sectionIndex}>01</span><div><h2>The record at a glance.</h2><p>Source metadata, organized for inspection. Unavailable fields remain visible.</p></div></div>
+      <dl className={styles.stats}>{stats.map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>
+      {missing > 0 && <p className={styles.note}><strong>{missing} documentation {missing === 1 ? "check was" : "checks were"} not found.</strong> These are gaps in the available documentation. Open Evidence to see what was checked.</p>}
+      {d.contentHash && <ContentHash hash={d.contentHash} />}
+    </section>
+    <section id="evidence" className={styles.section}>
+      <div className={styles.sectionHeader}><span className={styles.sectionIndex}>02</span><div><h2>Evidence, with its context.</h2><p>Four perspectives on what the source documents. Open a section, then a check, to inspect the method and observation.</p></div></div>
+      <div id="coverage" className={styles.subsection}><CoveragePanel d={d} /></div>
+      <div id="license" className={styles.subsection}>
+        <h3>Declared licence</h3><p>The identifier below preserves the source spelling. Lookup-derived terms are separate from the source’s own evidence.</p>
+        <div className={styles.licenseGrid}>
+          <div><p className={styles.licenseLabel}>Published identifier</p><p className={styles.licenseValue}>{d.license.spdx}</p><EvidenceDot label={d.license.label} /></div>
+          <div><p className={styles.licenseLabel}>Static licence lookup</p><p className={styles.licenseValue}>{commercialUseLabel[d.license.commercialUse]}</p><p className={styles.caption}>A lookup of the declared identifier; review the source terms and any upstream restrictions.</p><div className={styles.licenseNotes}><span>Attribution requirement: {d.license.attribution === true ? "identified by lookup" : "not established here"}</span><span>Share-alike requirement: {d.license.shareAlike === true ? "identified by lookup" : "not established here"}</span></div></div>
         </div>
-      </section>
-
-      {/* Lineage */}
-      <section id="lineage" className="scroll-mt-32 pt-14">
-        <h2 className="font-serif text-2xl tracking-[-0.02em] text-accent md:text-3xl">Lineage</h2>
-        <p className="mt-2 max-w-xl text-sm text-muted-foreground">
-          The steps this dataset documents between its original sources and the version at the platform.
-          Stages the source does not document are shown as gaps, not hidden.
-        </p>
-        <div className="mt-6"><LineageGraph lineage={d.lineage} /></div>
-      </section>
-
-      {/* License */}
-      <section id="license" className="scroll-mt-32 pt-14">
-        <h2 className="font-serif text-2xl tracking-[-0.02em] text-accent md:text-3xl">Licence</h2>
-        <p className="mt-2 max-w-xl text-sm text-muted-foreground">
-          Terms as published by the source. Archivum reports what the record states — this is not legal advice.
-        </p>
-        <div className="mt-6 grid gap-4 sm:grid-cols-2">
-          <div className={`rounded-[10px] border p-6 ${d.license.commercialUse === "permitted" ? "border-verified/40 bg-verified/5" : d.license.commercialUse === "not_stated" ? "border-asserted/40 bg-asserted/5" : "border-risk/40 bg-risk/5"}`}>
-            <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground">Commercial terms</p>
-            <p className={`mt-2 text-xl font-medium ${d.license.commercialUse === "permitted" ? "text-verified" : d.license.commercialUse === "not_stated" ? "text-asserted" : "text-risk"}`}>
-              {commercialUseLabel[d.license.commercialUse]}
-            </p>
-          </div>
-          <div className="rounded-[10px] border border-border bg-surface p-6">
-            <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground">Declared licence</p>
-            <p className={`mt-2 font-mono text-xl ${d.license.spdx === "Not stated" ? "text-asserted" : "text-foreground"}`}>{d.license.spdx}</p>
-            <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-[12px] text-muted-foreground">
-              <span>attribution {d.license.attribution ? "required" : "not stated"}</span>
-              <span>share-alike {d.license.shareAlike ? "yes" : "no"}</span>
-              <EvidenceDot label={d.license.label} />
-            </div>
-          </div>
-        </div>
-        {d.license.notes.length > 0 && (
-          <div className="mt-4 rounded-[10px] border border-asserted/40 bg-asserted/5 p-5">
-            <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-asserted">Notes from the record</p>
-            <ul className="mt-2 space-y-1">
-              {d.license.notes.map((c) => (
-                <li key={c} className="text-sm leading-relaxed text-muted-foreground">{c}</li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </section>
-
-      {/* Versions */}
-      <section id="versions" className="scroll-mt-32 pt-14">
-        <h2 className="font-serif text-2xl tracking-[-0.02em] text-accent md:text-3xl">Version history</h2>
-        <p className="mt-2 max-w-xl text-sm text-muted-foreground">
-          Per-version coverage makes documentation drift visible over time.
-        </p>
-        <div className="mt-6"><VersionList versions={d.versions} /></div>
-      </section>
-
-      {/* Schema */}
-      <section id="schema" className="scroll-mt-32 pt-14">
-        <h2 className="font-serif text-2xl tracking-[-0.02em] text-accent md:text-3xl">Schema</h2>
-        <div className="mt-6">
-          {d.schema.length ? <SchemaTable schema={d.schema} /> :
-            <p className="rounded-[10px] border border-border bg-surface p-6 text-sm text-muted-foreground">Not documented at the source.</p>}
-        </div>
-      </section>
-
-      {/* Samples */}
-      <section id="samples" className="scroll-mt-32 pt-14">
-        <h2 className="font-serif text-2xl tracking-[-0.02em] text-accent md:text-3xl">Sample records</h2>
-        <div className="mt-6">
-          {d.sampleRecords.length ? <SampleRecords records={d.sampleRecords} /> :
-            <p className="rounded-[10px] border border-border bg-surface p-6 text-sm text-muted-foreground">Not documented at the source.</p>}
-        </div>
-      </section>
-
-      {/* Integrate */}
-      <section id="integrate" className="scroll-mt-32 pt-14">
-        <h2 className="font-serif text-2xl tracking-[-0.02em] text-accent md:text-3xl">Integrate</h2>
-        <div className="mt-6"><IntegrateTabs slug={d.slug} version={d.version} /></div>
-      </section>
-
-      {/* Related */}
-      {related.length > 0 && (
-        <section className="pt-16">
-          <h2 className="font-serif text-2xl tracking-[-0.02em] text-accent md:text-3xl">Similar datasets</h2>
-          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {related.map((r) => <DatasetCard key={r.slug} d={r} />)}
-          </div>
-        </section>
-      )}
-    </div>
-  );
+        {d.license.notes.length > 0 && <div className={styles.note}><strong>Notes attached to the record</strong><ul>{d.license.notes.map((note) => <li key={note}>{note}</li>)}</ul></div>}
+      </div>
+      <div id="lineage" className={styles.subsection}><h3>Recorded lineage</h3><p>Only nodes and connections supplied by this record appear below. Missing documentation is named separately.</p><LineageGraph lineage={d.lineage} /></div>
+    </section>
+    <section id="history" className={styles.section}>
+      <div className={styles.sectionHeader}><span className={styles.sectionIndex}>03</span><div><h2>A record through time.</h2><p>Available observations, most recent first. Row changes appear only when measured; licence and schema comparisons require historical snapshots.</p></div></div>
+      <div id="versions" className={styles.subsection}><VersionList versions={d.versions} /></div>
+    </section>
+    <section id="structure" className={styles.section}>
+      <div className={styles.sectionHeader}><span className={styles.sectionIndex}>04</span><div><h2>Inside the dataset.</h2><p>Inspect documented fields and the preview rows available in this record.</p></div></div>
+      <div id="schema" className={styles.subsection}><h3>Schema</h3>{d.schema.length ? <SchemaTable schema={d.schema} /> : <p className={styles.empty}>No schema fields are available in this record.</p>}</div>
+      <div id="samples" className={styles.subsection}><h3>Preview records</h3>{d.sampleRecords.length ? <><p>{d.sampleRecords.length} preview {d.sampleRecords.length === 1 ? "row" : "rows"} supplied with this record{dataMode === "illustrative" ? " as illustrative examples" : ""}. This preview does not describe the distribution of the full dataset.</p><SampleRecords records={d.sampleRecords} /></> : <p className={styles.empty}>Preview rows are not available. Check the original source for supported previews and access terms.</p>}</div>
+      <div id="integrate" className={styles.subsection}><h3>Use the original source</h3><p>Download and access instructions belong to the source platform. Archivum’s SDK and CLI are not available in this release.</p>{sourceUrl && <a className={styles.secondary} href={sourceUrl} rel="noopener noreferrer">Open source instructions ↗</a>}</div>
+    </section>
+    {related.length > 0 && <section className={styles.section}><div className={styles.sectionHeader}><span className={styles.sectionIndex}>↗</span><div><h2>Continue exploring.</h2><p>Other records with related catalog metadata. This does not imply derivation.</p></div></div><div className={styles.related}>{related.map((record) => <DatasetCard d={record} key={record.slug} />)}</div></section>}
+  </article>;
 }

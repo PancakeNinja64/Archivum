@@ -1,0 +1,2 @@
+.wordmark{display:inline-grid;width:145px;vertical-align:middle;line-height:0}.wordmark img{width:100%;height:auto;grid-area:1/1}.onDark{display:none}:global(.dark) .onLight{display:none}:global(.dark) .onDark{display:block}
+@media(max-width:767px){.wordmark{width:133px}}

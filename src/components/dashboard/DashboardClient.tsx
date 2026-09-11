@@ -157,8 +157,8 @@ export function DashboardClient() {
                       </td>
                       <td className="tnum px-4 py-3 font-mono" style={{ color: coverageColorVar(w.coverageTotal) }}>{w.coverageTotal}%</td>
                       <td className="tnum px-4 py-3 font-mono text-[12px]">
-                        <span className={w.coverageDelta > 0 ? "text-verified" : w.coverageDelta < 0 ? "text-risk" : "text-muted-foreground"}>
-                          {w.coverageDelta > 0 ? `+${w.coverageDelta}` : w.coverageDelta}
+                        <span className={(w.coverageDelta ?? 0) > 0 ? "text-verified" : (w.coverageDelta ?? 0) < 0 ? "text-risk" : "text-muted-foreground"}>
+                          {(w.coverageDelta ?? 0) > 0 ? `+${w.coverageDelta}` : (w.coverageDelta ?? "—")}
                         </span>
                       </td>
                       <td className="px-4 py-3"><Sparkline points={w.coverageHistory} /></td>

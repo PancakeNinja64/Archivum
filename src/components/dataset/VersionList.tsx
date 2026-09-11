@@ -1,25 +1,17 @@
 import type { DatasetVersion } from "@/lib/types";
-import { fmtDate, fmtInt, coverageColorVar } from "@/lib/utils";
+import { fmtDate, fmtInt } from "@/lib/utils";
+import styles from "./passport.module.css";
 
 export function VersionList({ versions }: { versions: DatasetVersion[] }) {
-  return (
-    <div className="overflow-hidden rounded-[10px] border border-border bg-surface">
-      <ul>
-        {versions.map((v) => (
-          <li key={v.version} className="border-b border-border px-5 py-4 last:border-0">
-            <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <p className="text-sm text-foreground">{v.note}</p>
-              <span className="font-mono text-[11px] text-muted-foreground">{fmtDate(v.date)}</span>
-            </div>
-            <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-[11px] text-muted-foreground">
-              <span className="text-foreground">{v.version}</span>
-              <span>{v.author}</span>
-              <span className="tnum"><span className="text-verified">+{fmtInt(v.rowsAdded)}</span> / <span className="text-risk">−{fmtInt(v.rowsRemoved)}</span> rows</span>
-              <span className="tnum">coverage <span style={{ color: coverageColorVar(v.coverageTotal) }}>{v.coverageTotal}%</span></span>
-            </div>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
+  if (!versions.length) return <p className={styles.empty}>No historical observations are available in this record yet.</p>;
+  return <ol className="divide-y divide-border border-y border-border">
+    {versions.map((version, index) => <li key={`${version.version}-${version.date}-${index}`} className="grid gap-3 py-6 md:grid-cols-[180px_1fr] md:gap-8">
+      <div className="flex items-center gap-3 font-mono text-[12px] text-muted-foreground"><span className="h-2 w-2 rounded-full border border-border-strong bg-surface" aria-hidden /><time dateTime={version.date ?? undefined}>{fmtDate(version.date)}</time></div>
+      <div><p className="text-[15px] text-foreground">{version.note || "Dataset metadata observed"}</p>
+        <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-[12px] text-muted-foreground"><span className="font-mono text-foreground">{version.version || "Revision not stated"}</span><span>{version.author}</span>{version.coverageTotal !== null && <span>Documentation coverage {version.coverageTotal}%</span>}
+          {version.rowsAdded !== null || version.rowsRemoved !== null ? <span>{version.rowsAdded !== null && `+${fmtInt(version.rowsAdded)} added`}{version.rowsAdded !== null && version.rowsRemoved !== null && " · "}{version.rowsRemoved !== null && `${fmtInt(version.rowsRemoved)} removed`}</span> : <span>Row changes not measured</span>}
+        </div>
+      </div>
+    </li>)}
+  </ol>;
 }

@@ -10,6 +10,8 @@ import { Footer } from "@/components/layout/Footer";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://archivum.tech"),
+  robots: process.env.NEXT_PUBLIC_DATA_SOURCE === "supabase" ? undefined : { index: false, follow: false },
   title: {
     default: "Archivum — The record of public AI data",
     template: "%s · Archivum",
@@ -26,12 +28,12 @@ export const metadata: Metadata = {
     locale: "en_US",
     siteName: "Archivum",
   },
-  icons: { icon: "/favicon-new.svg", apple: "/favicon-new.svg" },
+  icons: { icon: [{ url: "/favicon.svg", type: "image/svg+xml" }, { url: "/favicon.ico", sizes: "any" }], apple: "/apple-touch-icon.png" },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0A0E14",
-  colorScheme: "dark",
+  themeColor: [{ media: "(prefers-color-scheme: dark)", color: "#0C0D0F" }, { media: "(prefers-color-scheme: light)", color: "#F3F3F0" }],
+  colorScheme: "dark light",
 };
 
 /** Footer catalog count tracks the live index. */
@@ -42,12 +44,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html
       lang="en"
       suppressHydrationWarning
-      className={`dark ${GeistSans.variable} ${GeistMono.variable} h-full antialiased`}
+      className={`${GeistSans.variable} ${GeistMono.variable} h-full antialiased`}
     >
-      <body className="paper-grain flex min-h-full flex-col bg-background text-foreground">
+      <body className="flex min-h-full flex-col bg-background text-foreground">
         <ThemeProvider>
+          <a href="#main-content" className="skip-link">Skip to content</a>
           <Nav />
-          <main className="relative z-[1] flex-1">{children}</main>
+          <main id="main-content" tabIndex={-1} className="relative z-[1] flex-1">{children}</main>
           <Footer />
         </ThemeProvider>
         <Analytics />

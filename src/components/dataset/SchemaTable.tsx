@@ -2,10 +2,10 @@ import type { SchemaField } from "@/lib/types";
 
 export function SchemaTable({ schema }: { schema: SchemaField[] }) {
   return (
-    <div className="overflow-x-auto rounded-[10px] border border-border">
+    <div className="overflow-x-auto rounded-xl border border-border" role="region" aria-label="Dataset schema table" tabIndex={0}>
       <table className="w-full min-w-[560px] border-collapse text-sm">
         <thead>
-          <tr className="border-b border-border bg-surface text-left font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+          <tr className="border-b border-border bg-surface text-left font-mono text-[12px] text-muted-foreground">
             <th className="px-4 py-3 font-normal">Field</th>
             <th className="px-4 py-3 font-normal">Type</th>
             <th className="px-4 py-3 font-normal">Nullable</th>

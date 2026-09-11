@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://archivum.tech">
-    <img src="./public/logo-mark-new.svg" alt="Archivum" width="72" />
+    <img src="./src/brand/supplied-2026-09-11/Archivum-compact-A-dark-vector.svg" alt="Archivum" width="72" />
   </a>
 </p>
 

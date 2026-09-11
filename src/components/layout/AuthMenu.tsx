@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { supabaseBrowser } from "@/lib/supabase/browser";
 
@@ -8,6 +9,7 @@ const live = process.env.NEXT_PUBLIC_DATA_SOURCE === "supabase";
 
 /** Sign-in / account control for the nav. Renders nothing in mock mode. */
 export function AuthMenu({ variant = "desktop" }: { variant?: "desktop" | "mobile" }) {
+  const router = useRouter();
   const [email, setEmail] = useState<string | null | undefined>(live ? undefined : null);
 
   useEffect(() => {
@@ -20,11 +22,13 @@ export function AuthMenu({ variant = "desktop" }: { variant?: "desktop" | "mobil
     return () => sub.subscription.unsubscribe();
   }, []);
 
-  if (!live || email === undefined) return null;
+  if (!live) return <Link href="/dashboard/" className="inline-flex min-h-11 items-center text-[13px] text-muted-foreground hover:text-foreground">Demo workspace ↗</Link>;
+  if (email === undefined) return <span className="text-xs text-muted-foreground">Account…</span>;
 
   async function signOut() {
     await supabaseBrowser().auth.signOut();
-    window.location.href = "/";
+    router.push("/");
+    router.refresh();
   }
 
   if (variant === "mobile") {
