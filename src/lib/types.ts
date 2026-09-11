@@ -42,8 +42,8 @@ export interface DatasetLicense {
   spdx: string;
   /** Derived from a static SPDX lookup — never inferred from prose. */
   commercialUse: CommercialUse;
-  attribution: boolean;
-  shareAlike: boolean;
+  attribution: boolean | null;
+  shareAlike: boolean | null;
   /** Was the licence retrieved as an artifact, stated in prose, or absent? */
   label: EvidenceLabel;
   /** Unresolved terms inherited from upstream sources. Empty when clean. */
@@ -78,13 +78,13 @@ export interface LineageGraph {
 
 export interface DatasetVersion {
   version: string;
-  date: string; // ISO date
-  rowsAdded: number;
-  rowsRemoved: number;
+  date: string | null; // ISO observation date, when supplied
+  rowsAdded: number | null;
+  rowsRemoved: number | null;
   note: string;
   author: string;
   /** Coverage at the time of this version — lets the UI show documentation drift. */
-  coverageTotal: number;
+  coverageTotal: number | null;
 }
 
 export interface SchemaField {
@@ -107,8 +107,8 @@ export interface Dataset {
   languages: string[];
   modality: Modality;
 
-  sizeRows: number;
-  sizeBytes: number;
+  sizeRows: number | null;
+  sizeBytes: number | null;
 
   license: DatasetLicense;
 
@@ -120,10 +120,10 @@ export interface Dataset {
   coverageDetail: CoverageDetail;
   coverageVersion: string;
   /** ISO timestamp of the check the figures describe. Shown wherever coverage is shown. */
-  coverageCheckedAt: string;
+  coverageCheckedAt: string | null;
 
-  firstPublished: string; // ISO
-  lastUpdated: string; // ISO
+  firstPublished: string | null; // ISO source publication date
+  lastUpdated: string | null; // ISO source update date
   contentHash: string;
   version: string;
 
@@ -193,9 +193,9 @@ export interface WatchedDataset {
   name: string;
   publisher: string;
   coverageTotal: number;
-  coverageDelta: number;
+  coverageDelta: number | null;
   licenseStatus: 'ok' | 'changed' | 'unresolved';
-  lastChecked: string;
+  lastChecked: string | null;
   /** 12 points, oldest first — for the sparkline. */
   coverageHistory: number[];
 }

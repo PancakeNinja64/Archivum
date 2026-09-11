@@ -35,12 +35,12 @@ export async function getDatasets(f: DatasetFilters = {}): Promise<Paginated<Dat
   if (typeof f.minCoverage === 'number') rows = rows.filter((d) => d.coverageTotal >= f.minCoverage!);
   if (f.updatedWithinDays) {
     const cutoff = Date.now() - f.updatedWithinDays * 86_400_000;
-    rows = rows.filter((d) => new Date(d.lastUpdated).getTime() >= cutoff);
+    rows = rows.filter((d) => d.lastUpdated !== null && new Date(d.lastUpdated).getTime() >= cutoff);
   }
 
   rows.sort((a, b) => {
-    if (sort === 'recent') return +new Date(b.lastUpdated) - +new Date(a.lastUpdated);
-    if (sort === 'size') return b.sizeRows - a.sizeRows;
+    if (sort === 'recent') return (b.lastUpdated ? Date.parse(b.lastUpdated) : 0) - (a.lastUpdated ? Date.parse(a.lastUpdated) : 0);
+    if (sort === 'size') return (b.sizeRows ?? -1) - (a.sizeRows ?? -1);
     if (sort === 'name') return a.name.localeCompare(b.name);
     return b.coverageTotal - a.coverageTotal;
   });

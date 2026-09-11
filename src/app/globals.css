@@ -4,10 +4,8 @@
 
 /* ==========================================================================
    Archivum design tokens
-   Brand ink is #56B1F6, traced from the ARCH mark. Every blue on the site is a
-   step on hue 206 so the identity reads as one color.
-   Dark is the only theme.
-   All values below are contrast-verified against their own ground.
+   Graphite reading surfaces, mineral objects, and restrained blue actions.
+   Light and dark reading modes share the same layout and evidence language.
    ========================================================================== */
 
 @theme inline {
@@ -36,69 +34,40 @@
   --ease-archivum: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* ---------- Light ---------- */
+/* Reading surfaces adapt; spatial stages retain their own dark palette. */
 :root {
-  --background: #fbfcfd;
-  --surface: #ffffff;
-  --surface-elevated: #ffffff;
-  --foreground: #0d1117;        /* 18.4:1 */
-  --muted: #f2f5f8;
-  --muted-foreground: #55606d;  /*  6.2:1 */
-  --border: #e3e9ef;
-  --border-strong: #cfd8e2;
-
-  /* #56B1F6 is only 2.2:1 on this ground, so it is reserved for the mark,
-     display type at 32px and above, and non-text graphics. */
-  --accent: #56b1f6;
-  --accent-strong: #1a6fb2;     /*  5.2:1 — buttons, UI, 14px+ text */
-  --accent-deep: #155e96;       /*  6.7:1 — body text, inline links */
-  --accent-wash: #eef6fe;
-  --accent-soft: #d3e9fc;
-
-  /* Trust tiers — three distinct hues, never distinguished by color alone. */
-  --tier-verified: #0c7a49;     /*  5.3:1 — green,  filled dot */
-  --tier-inferred: #1a6fb2;     /*  5.2:1 — blue,   half dot   */
-  --tier-asserted: #8a5707;     /*  5.9:1 — amber,  hollow dot */
-  --risk: #c4302b;              /*  5.4:1 */
-
-  --selection: #d3e9fc;
-  --grain-opacity: 0.03;
+  --graphite: #0c0d0f; --mineral: #f3f3f0; --silver: #a8adb4; --signal-blue: #4da3ff;
+  --background: #f3f3f0; --surface: #ffffff; --surface-elevated: #e8e9e6;
+  --foreground: #0c0d0f; --muted: #e8e9e6; --muted-foreground: #555b63;
+  --border: #cccecc; --border-strong: #a8adb4;
+  --accent: #1455b3; --accent-strong: #1455b3; --accent-deep: #174989;
+  --accent-wash: #e7effc; --accent-soft: #d6e5fc;
+  --action-fill: #174989; --action-foreground: #ffffff;
+  --tier-verified: #334a62; --tier-inferred: #1455b3; --tier-asserted: #526375;
+  --risk: #9a482d; --selection: #d6e5fc; --grain-opacity: 0;
+  --font-instrument: "Instrument Serif";
 }
-
-/* ---------- Dark (canonical) ---------- */
 .dark {
-  --background: #0a0e14;
-  --surface: #101720;
-  --surface-elevated: #151d28;
-  --foreground: #edf2f7;        /* 17.2:1 */
-  --muted: #151d28;
-  --muted-foreground: #93a1b1;  /*  7.3:1 */
-  --border: #1e2833;
-  --border-strong: #2b3846;
-
-  /* The exact mark color, safe for text at every size on this ground. */
-  --accent: #56b1f6;            /*  8.3:1 */
-  --accent-strong: #7dc4f8;
-  --accent-deep: #a5d6fa;
-  --accent-wash: #0e1a28;
-  --accent-soft: #17293d;
-
-  --tier-verified: #3dd68c;     /* 10.3:1 */
-  --tier-inferred: #56b1f6;     /*  8.3:1 */
-  --tier-asserted: #f0b03c;     /* 10.1:1 */
-  --risk: #f0575c;              /*  5.7:1 */
-
-  --selection: #17293d;
-  --grain-opacity: 0.045;
+  --background: #0c0d0f; --surface: #151719; --surface-elevated: #1e2125;
+  --foreground: #f3f3f0; --muted: #1e2125; --muted-foreground: #a8adb4;
+  --border: #30353b; --border-strong: #5c636c;
+  --accent: #4da3ff; --accent-strong: #205da8; --accent-deep: #4da3ff;
+  --accent-wash: #142236; --accent-soft: #20334d;
+  --action-fill: #4da3ff; --action-foreground: #0c0d0f;
+  --tier-verified: #e1e2df; --tier-inferred: #4da3ff; --tier-asserted: #a8adb4;
+  --risk: #e8b092; --selection: #254570; --grain-opacity: 0;
 }
-
-html {
-  scroll-behavior: smooth;
-}
-
+html { scroll-padding-top: 88px; }
+.skip-link { position: fixed; left: 16px; top: -80px; z-index: 100; padding: 12px 20px; background: var(--action-fill); color: var(--action-foreground); }
+.skip-link:focus { top: 12px; }
+button, select, summary { cursor: pointer; }
+button:disabled { cursor: not-allowed; }
+dialog { color: var(--foreground); }
+main:focus { outline: none; }
 body {
   background: var(--background);
   color: var(--foreground);
+  overflow-x: clip;
   font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -111,7 +80,7 @@ body {
 }
 
 :focus-visible {
-  outline: 2px solid var(--accent-strong);
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
   border-radius: 3px;
 }

@@ -2,157 +2,35 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
-import { Logo, LogoMark } from "./Logo";
-import { WaitlistModal } from "./WaitlistModal";
+import { useRef, useState } from "react";
+import { BrandWordmark } from "@/components/brand/Brand";
 import { AuthMenu } from "./AuthMenu";
+import styles from "./Shell.module.css";
 
 const links = [
   { href: "/explore/", label: "Explore" },
-  { href: "/delisted/", label: "Graveyard" },
+  { href: "/delisted/", label: "Delisted" },
+  { href: "/docs/#methodology", label: "Methodology" },
   { href: "/docs/", label: "Docs" },
-  { href: "/pricing/", label: "Pricing" },
-  { href: "/publish/", label: "Publish" },
-  { href: "/dashboard/", label: "Dashboard" },
 ];
-
 export function Nav() {
-  const [scrolled, setScrolled] = useState(false);
-  const [open, setOpen] = useState(false);
-  const [waitlist, setWaitlist] = useState(false);
   const pathname = usePathname();
-  const [prevPath, setPrevPath] = useState(pathname);
-  if (pathname !== prevPath) {
-    setPrevPath(pathname);
-    setOpen(false);
-  }
-  const drawerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 12);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
-  // Escape closes; focus moves into the drawer while open.
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
-    document.addEventListener("keydown", onKey);
-    drawerRef.current?.querySelector<HTMLElement>("a, button")?.focus();
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = "";
-    };
-  }, [open]);
-
-  const isActive = (href: string) => pathname === href || pathname.startsWith(href);
-
-  return (
-    <>
-      <header
-        className={`fixed inset-x-0 top-0 z-50 transition-all duration-200 ease-out ${
-          scrolled || open
-            ? "border-b border-border bg-background/85 backdrop-blur-md"
-            : "bg-transparent"
-        }`}
-      >
-        <nav
-          aria-label="Primary"
-          className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6 md:px-8"
-        >
-          <Link href="/" className="text-accent transition-opacity duration-200 hover:opacity-80" aria-label="Archivum home">
-            <span className="hidden sm:inline-flex"><Logo height={26} /></span>
-            <span className="sm:hidden"><LogoMark height={26} /></span>
-          </Link>
-
-          <ul className="hidden items-center gap-7 lg:flex">
-            {links.map((l) => (
-              <li key={l.href}>
-                <Link
-                  href={l.href}
-                  aria-current={isActive(l.href) ? "page" : undefined}
-                  className={`link-underline text-[13px] transition-colors duration-200 ${
-                    isActive(l.href) ? "text-foreground" : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {l.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-
-          <div className="flex items-center gap-2">
-            <AuthMenu />
-            {process.env.NEXT_PUBLIC_DATA_SOURCE !== "supabase" && (
-              <button
-                type="button"
-                onClick={() => setWaitlist(true)}
-                className="hidden rounded-md bg-accent-strong px-3.5 py-2 text-[13px] font-medium text-white transition-all duration-200 ease-out hover:-translate-y-0.5 hover:opacity-90 sm:inline-flex"
-              >
-                Join the waitlist
-              </button>
-            )}
-            <button
-              type="button"
-              aria-expanded={open}
-              aria-label={open ? "Close menu" : "Open menu"}
-              onClick={() => setOpen((v) => !v)}
-              className="flex h-11 w-11 items-center justify-center rounded-md text-muted-foreground hover:text-foreground sm:h-9 sm:w-9 lg:hidden"
-            >
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden>
-                {open ? (
-                  <path d="M3 3l12 12M15 3L3 15" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-                ) : (
-                  <path d="M2 4.5h14M2 9h14M2 13.5h14" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-                )}
-              </svg>
-            </button>
-          </div>
-        </nav>
-      </header>
-
-      {/* Mobile drawer */}
-      {open && (
-        <div
-          ref={drawerRef}
-          className="fixed inset-0 z-40 flex flex-col bg-background pt-20 lg:hidden"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Site navigation"
-        >
-          <ul className="flex flex-col gap-1 px-6">
-            {links.map((l) => (
-              <li key={l.href}>
-                <Link
-                  href={l.href}
-                  className={`block rounded-md px-3 py-3 text-lg ${
-                    isActive(l.href) ? "bg-muted text-foreground" : "text-muted-foreground"
-                  }`}
-                >
-                  {l.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-          <div className="mt-auto flex flex-col gap-3 border-t border-border p-6">
-            <AuthMenu variant="mobile" />
-            {process.env.NEXT_PUBLIC_DATA_SOURCE !== "supabase" && (
-              <button
-                type="button"
-                onClick={() => { setOpen(false); setWaitlist(true); }}
-                className="rounded-md bg-accent-strong px-5 py-3 text-sm font-medium text-white"
-              >
-                Join the waitlist
-              </button>
-            )}
-          </div>
-        </div>
-      )}
-
-      <WaitlistModal open={waitlist} onClose={() => setWaitlist(false)} />
-    </>
-  );
+  const dialog = useRef<HTMLDialogElement>(null);
+  const [open, setOpen] = useState(false);
+  const close = () => { dialog.current?.close(); setOpen(false); };
+  return <>
+    <header className={styles.header}>
+      <nav aria-label="Primary" className={styles.nav}>
+        <Link href="/" className={styles.brand} aria-label="Archivum home"><BrandWordmark /></Link>
+        <ul className={styles.links}>{links.map(link => <li key={link.label}><Link href={link.href} aria-current={!link.href.includes("#") && pathname === link.href ? "page" : undefined}>{link.label}</Link></li>)}</ul>
+        <div className={styles.account}><AuthMenu /></div>
+        <button className={styles.menu} aria-expanded={open} aria-controls="site-menu" onClick={() => { dialog.current?.showModal(); setOpen(true); }}>Menu <span aria-hidden>☰</span></button>
+      </nav>
+    </header>
+    <dialog aria-label="Site menu" id="site-menu" ref={dialog} className={styles.dialog} onClose={() => setOpen(false)}>
+      <div className={styles.dialogTop}><span>Navigate Archivum</span><button onClick={close} aria-label="Close menu">Close ×</button></div>
+      <nav aria-label="Mobile navigation">{links.map((link, index) => <Link key={link.label} href={link.href} onClick={close}><span>0{index + 1}</span>{link.label}<span aria-hidden>↗</span></Link>)}</nav>
+      <div className={styles.dialogBottom} onClick={close}><AuthMenu variant="mobile" /><Link href="/publish/">Submit a dataset ↗</Link></div>
+    </dialog>
+  </>;
 }

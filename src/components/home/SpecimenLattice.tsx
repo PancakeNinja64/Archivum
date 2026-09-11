@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef } from 'react';
-import { useReducedMotion, useScroll } from 'framer-motion';
+import { useReducedMotion, useScroll } from 'motion/react';
 import { readTokens, withAlpha, type Tokens } from '@/lib/atlas/draw';
 import type { CoverageSectionKey } from '@/lib/coverage/rules';
 import {

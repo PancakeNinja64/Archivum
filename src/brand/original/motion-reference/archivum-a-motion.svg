@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="Archivum motion mark">
+<rect width="512" height="512" rx="112" fill="#0C0D0F"/>
+<g transform="translate(48 48) scale(2.311111)">
+  <polygon points="22,160 75,22 94,22 54,160" fill="#F3F3F0"/>
+  <polygon points="86,22 105,22 158,160 126,160" fill="#F3F3F0"/>
+  <polygon points="53,111 88,111 94,127 47,127" fill="#F3F3F0">
+    <animateTransform attributeName="transform" type="translate" values="0 0;-5 6;0 0" dur="1.6s" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.2 1;0.4 0 0.2 1"/>
+  </polygon>
+  <polygon points="91,105 126,105 133,121 98,121" fill="#4DA3FF">
+    <animateTransform attributeName="transform" type="translate" values="0 0;6 -5;0 0" dur="1.6s" repeatCount="indefinite" calcMode="spline" keySplines="0.4 0 0.2 1;0.4 0 0.2 1"/>
+  </polygon>
+</g>
+</svg>

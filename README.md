@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://archivum.tech">
-    <img src="./public/logo-arch-new.svg" alt="Archivum" width="380" />
+    <img src="./src/brand/supplied-2026-09-11/Archivum-wordmark-dark-vector.svg" alt="Archivum" width="380" />
   </a>
 </p>
 
@@ -85,7 +85,8 @@ With no Supabase env configured (or `NEXT_PUBLIC_DATA_SOURCE=mock`), the site ru
 ```text
 src/          Next.js application (pages, API routes, components, coverage & ingest libs)
 supabase/     SQL migrations applied to the live project
-public/       Static assets (logos, favicons)
+src/brand/    Official wordmarks, icons, and social deliverables (not web-served)
+public/       Favicons and other files browsers request by URL
 scripts/      Utility scripts
 README.md     Product overview (this file)
 README-BACKEND.md   Deploy, env, import, and operations

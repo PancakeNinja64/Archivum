@@ -81,7 +81,7 @@ export const huggingface: SourceAdapter = {
       ? canonicalId.split('/') : [canonicalId, canonicalId];
 
     // 2. Parallel secondary fetches. Every one is allowed to fail without aborting.
-    const [readmeRes, refsRes, commitsRes, orgRes, splitsRes, sizeRes, rowsRes] = await Promise.all([
+    const [readmeRes, , commitsRes, orgRes, splitsRes, sizeRes, rowsRes] = await Promise.all([
       sourceFetch(`${HF}/datasets/${canonicalId}/raw/main/README.md`, { token, accept: 'text/plain' }),
       sourceFetch(`${HF}/api/datasets/${canonicalId}/refs`, { token }),
       sourceFetch(`${HF}/api/datasets/${canonicalId}/commits/main`, { token }),

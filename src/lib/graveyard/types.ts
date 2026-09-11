@@ -47,6 +47,10 @@ export interface DelistedRecord {
   consecutiveFailures: number;
   /** Named successor. Only for endState === 'superseded'. */
   supersededBy?: string;
+  /** Supplied evidence only; never derive a URL from a name. */
+  sourceUrl?: string;
+  successorUrl?: string;
+  observationEvidence?: string;
 
   /**
    * Downstream references. Null until the ingestion exists.

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion } from "motion/react";
 import type { CoverageSectionKey } from "@/lib/coverage/rules";
 import { RISK_PROBES } from "@/lib/home/specimen";
 import { SpecimenLattice } from "./SpecimenLattice";

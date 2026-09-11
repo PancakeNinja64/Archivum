@@ -8,11 +8,9 @@ import { createClient } from '@supabase/supabase-js';
 import { publicConfig } from '../../config';
 import type {
   Dataset, DatasetFilters, DatasetSummary, Paginated, Facets,
-  LineageGraph, ActivityEvent, WatchedDataset, Platform, Modality,
-  DatasetLicense, CoverageBand,
+  LineageGraph, ActivityEvent, WatchedDataset,
 } from '../../types';
-import { bandFor } from '../../utils';
-import { computeCoverage } from '../../coverage/rules';
+import { rowDataset, rowSummary, type Row } from './normalize';
 
 /** One client per environment. On the server we use a plain anon client (no cookies needed for public reads). */
 function sb() {
@@ -22,77 +20,6 @@ function sb() {
     });
   }
   return createBrowserClient(publicConfig.supabaseUrl, publicConfig.supabaseAnonKey);
-}
-
-/* ---------- row -> domain mapping ---------- */
-
-type Row = Record<string, unknown>;
-const s = (v: unknown, fallback = ''): string => (typeof v === 'string' ? v : fallback);
-const n = (v: unknown, fallback = 0): number => (typeof v === 'number' ? v : fallback);
-
-function rowLicense(r: Row): DatasetLicense {
-  const spdx = s(r.license_spdx) || 'Not stated';
-  return {
-    spdx,
-    commercialUse: (s(r.commercial_use) || 'not_stated') as DatasetLicense['commercialUse'],
-    attribution: /^CC-BY|MIT|Apache|BSD/i.test(spdx),
-    shareAlike: /-SA/i.test(spdx),
-    label: (s(r.license_status) || 'not_found') as DatasetLicense['label'],
-    notes: [],
-  };
-}
-
-function rowSummary(r: Row): DatasetSummary {
-  const total = n(r.coverage_total);
-  return {
-    slug: s(r.slug),
-    name: s(r.name),
-    publisher: s(r.publisher),
-    description: s(r.description),
-    platform: s(r.platform, 'direct') as Platform,
-    domain: (r.domain as string[]) ?? [],
-    languages: (r.languages as string[]) ?? [],
-    modality: (s(r.modality, 'text')) as Modality,
-    sizeRows: n(r.size_rows),
-    sizeBytes: n(r.size_bytes),
-    license: rowLicense(r),
-    coverageTotal: total,
-    coverageBand: bandFor(total) as CoverageBand,
-    coverageCheckedAt: s(r.coverage_checked_at, new Date().toISOString()),
-    lastUpdated: s(r.last_source_update, s(r.updated_at, new Date().toISOString())),
-    version: s(r.source_revision, '').slice(0, 7) || 'current',
-  };
-}
-
-function rowDataset(r: Row, versions: Row[]): Dataset {
-  const summary = rowSummary(r);
-  // Sections are recomputed from the stored 28-check detail through the same
-  // pure function the importer used — one source of arithmetic, everywhere.
-  const detail = ((r.coverage_detail as Dataset['coverageDetail']) ?? {});
-  const sections = Object.keys(detail).length ? computeCoverage(detail).sections : [];
-  return {
-    ...summary,
-    publisherSlug: s(r.publisher_slug),
-    platformUrl: s(r.source_url),
-    coverageSections: sections,
-    coverageDetail: detail,
-    coverageVersion: s(r.coverage_version, '1.0'),
-    firstPublished: s(r.first_published, s(r.created_at, new Date().toISOString())),
-    contentHash: s(r.metadata_hash, ''),
-    lineage: ((r.lineage as LineageGraph) ?? { nodes: [], edges: [], completeness: 0, undocumentedStages: [] }),
-    versions: versions.map((v) => ({
-      version: s(v.version_label),
-      date: s(v.observed_at),
-      rowsAdded: 0,
-      rowsRemoved: 0,
-      note: s(v.note),
-      author: s(v.author, summary.publisher),
-      coverageTotal: n(v.coverage_total, summary.coverageTotal),
-    })),
-    schema: ((r.schema_fields as Dataset['schema']) ?? []),
-    sampleRecords: ((r.sample_records as Dataset['sampleRecords']) ?? []),
-    relatedSlugs: [],
-  };
 }
 
 const SUMMARY_COLS =
@@ -130,13 +57,15 @@ export async function getDataset(slug: string): Promise<Dataset | null> {
     .from('datasets').select('*').eq('slug', slug).maybeSingle();
   if (error) throw new Error(`getDataset failed: ${error.message}`);
   if (!d) return null;
-  const { data: versions } = await client.from('dataset_versions').select('*')
+  const { data: versions, error: versionsError } = await client.from('dataset_versions').select('*')
     .eq('dataset_id', d.id).order('observed_at', { ascending: false }).limit(20);
+  if (versionsError) throw new Error(`getDataset history failed: ${versionsError.message}`);
   return rowDataset(d as Row, (versions ?? []) as Row[]);
 }
 
 export async function getLineage(slug: string): Promise<LineageGraph | null> {
-  const { data } = await sb().from('datasets').select('lineage').eq('slug', slug).maybeSingle();
+  const { data, error } = await sb().from('datasets').select('lineage').eq('slug', slug).maybeSingle();
+  if (error) throw new Error(`getLineage failed: ${error.message}`);
   return (data?.lineage as LineageGraph) ?? null;
 }
 
@@ -150,22 +79,25 @@ export async function getFacets(): Promise<Facets> {
     licenses: [],
   };
   const client = sb();
-  const { data } = await client.from('catalog_facets').select('payload').eq('id', 1).maybeSingle();
+  const { data, error } = await client.from('catalog_facets').select('payload').eq('id', 1).maybeSingle();
+  if (error) throw new Error(`getFacets failed: ${error.message}`);
   const p = (data?.payload ?? {}) as Record<string, unknown>;
   if (!p || Object.keys(p).length === 0) {
-    const { count } = await client
+    const { count, error: countError } = await client
       .from('datasets')
       .select('id', { count: 'exact', head: true })
       .eq('status', 'published');
-    return { ...empty, total: count ?? 0 };
+    if (countError || count === null) throw new Error('Catalog totals are unavailable.');
+    return { ...empty, total: count };
   }
   let total = typeof p.total === 'number' ? p.total : 0;
   if (!total) {
-    const { count } = await client
+    const { count, error: countError } = await client
       .from('datasets')
       .select('id', { count: 'exact', head: true })
       .eq('status', 'published');
-    total = count ?? 0;
+    if (countError || count === null) throw new Error('Catalog totals are unavailable.');
+    total = count;
   }
   return {
     total,
@@ -178,19 +110,21 @@ export async function getFacets(): Promise<Facets> {
 }
 
 export async function getAllSlugs(): Promise<string[]> {
-  const { data } = await sb().from('datasets').select('slug').eq('status', 'published').limit(1000);
+  const { data, error } = await sb().from('datasets').select('slug').eq('status', 'published').limit(1000);
+  if (error) throw new Error(`getAllSlugs failed: ${error.message}`);
   return (data ?? []).map((r) => r.slug as string);
 }
 
 export async function getFeatured(count = 6): Promise<DatasetSummary[]> {
   const client = sb();
   // Well-documented entries plus the thinnest one — the contrast is the demonstration.
-  const [{ data: top }, { data: low }] = await Promise.all([
+  const [{ data: top, error: topError }, { data: low, error: lowError }] = await Promise.all([
     client.from('datasets').select(SUMMARY_COLS).eq('status', 'published')
       .order('coverage_total', { ascending: false }).limit(count - 1),
     client.from('datasets').select(SUMMARY_COLS).eq('status', 'published')
       .order('coverage_total', { ascending: true }).limit(1),
   ]);
+  if (topError || lowError) throw new Error('Featured records are unavailable.');
   const rows = [...(top ?? []), ...(low ?? [])] as unknown as Row[];
   const seen = new Set<string>();
   return rows.filter((r) => !seen.has(r.slug as string) && seen.add(r.slug as string)).map(rowSummary);
@@ -216,13 +150,13 @@ export async function getRelated(slug: string): Promise<DatasetSummary[]> {
 export async function getActivity(): Promise<ActivityEvent[]> {
   if (typeof window === 'undefined') return [];
   const res = await fetch('/api/activity', { credentials: 'same-origin' });
-  if (res.status === 401 || !res.ok) return [];
+  if (!res.ok) throw new Error(res.status === 401 ? 'Sign in to load saved data.' : 'Saved data could not be loaded.');
   return (await res.json()) as ActivityEvent[];
 }
 
 export async function getWatchlist(): Promise<WatchedDataset[]> {
   if (typeof window === 'undefined') return [];
   const res = await fetch('/api/watchlist', { credentials: 'same-origin' });
-  if (res.status === 401 || !res.ok) return [];
+  if (!res.ok) throw new Error(res.status === 401 ? 'Sign in to load saved data.' : 'Saved data could not be loaded.');
   return (await res.json()) as WatchedDataset[];
 }

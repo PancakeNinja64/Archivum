@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { safeReturnPath } from "@/lib/utils";
 import { supabaseBrowser } from "@/lib/supabase/browser";
 
 type Mode = "login" | "signup" | "reset";
@@ -38,16 +39,16 @@ export function AuthForm({ mode }: { mode: Mode }) {
       return;
     }
     setState("busy");
-    const sb = supabaseBrowser();
     try {
+      const sb = supabaseBrowser();
       if (mode === "signup") {
         const { error } = await sb.auth.signUp({ email, password });
         if (error) throw error;
-        window.location.href = "/dashboard/";
+        window.location.href = safeReturnPath(new URLSearchParams(window.location.search).get("next"));
       } else if (mode === "login") {
         const { error } = await sb.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        window.location.href = "/dashboard/";
+        window.location.href = safeReturnPath(new URLSearchParams(window.location.search).get("next"));
       } else {
         const { error } = await sb.auth.resetPasswordForEmail(email, {
           redirectTo: `${window.location.origin}/login/`,
@@ -63,6 +64,14 @@ export function AuthForm({ mode }: { mode: Mode }) {
   }
 
   const c = copy[mode];
+  if (process.env.NEXT_PUBLIC_DATA_SOURCE !== "supabase") return (
+    <div className="mx-auto max-w-md px-6 pb-24 pt-32">
+      <p className="text-xs text-muted-foreground">ILLUSTRATIVE CATALOG</p>
+      <h1 className="mt-4 text-4xl font-medium tracking-tight text-foreground">{c.title}</h1>
+      <p className="mt-5 text-base leading-relaxed text-muted-foreground">Accounts are unavailable in this local demonstration. You can explore every sample dataset without signing in.</p>
+      <Link href="/explore/" className="mt-6 inline-flex min-h-11 items-center text-accent">Explore datasets →</Link>
+    </div>
+  );
   const canSubmit =
     state !== "busy" &&
     !!email &&
@@ -79,7 +88,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
           If an account exists for {email}, a reset link is on its way. Check your inbox.
         </p>
       ) : (
-        <div className="mt-8 space-y-4">
+        <form className="mt-8 space-y-4" onSubmit={(event) => { event.preventDefault(); if (canSubmit) void submit(); }}>
           <label className="block font-mono text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
             Email
             <input
@@ -117,15 +126,15 @@ export function AuthForm({ mode }: { mode: Mode }) {
               </span>
             </label>
           )}
-          {error && <p className="text-sm leading-relaxed text-risk">{error}</p>}
+          {error && <p role="alert" className="text-sm leading-relaxed text-risk">{error}</p>}
           <button
-            type="button" onClick={submit}
+            type="submit"
             disabled={!canSubmit}
             className="w-full rounded-md bg-accent-strong px-4 py-2.5 text-sm font-medium text-white transition-all duration-200 hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {state === "busy" ? "…" : c.cta}
           </button>
-        </div>
+        </form>
       )}
 
       <div className="mt-6 flex flex-wrap gap-x-5 gap-y-1 font-mono text-[12px] text-muted-foreground">
@@ -135,8 +144,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
       </div>
       {mode === "signup" && (
         <p className="mt-6 text-[12px] leading-relaxed text-muted-foreground">
-          Password only — no OAuth, no tracking. Your email is used for sign-in and password
-          resets, nothing else. See our{" "}
+          This form uses email and password sign-in. See how account information is handled in our{" "}
           <Link href="/privacy/" className="link-underline text-foreground">Privacy Policy</Link>.
         </p>
       )}

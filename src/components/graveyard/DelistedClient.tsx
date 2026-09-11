@@ -1,273 +1,90 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { DELISTED_FIXTURE } from '@/lib/graveyard/fixture';
-import { decayIndex } from '@/lib/graveyard/decay';
-import type { CohortSize } from '@/lib/graveyard/board';
-import {
-  type DelistedFilters,
-  type EndState,
-} from '@/lib/graveyard/types';
-import type { Platform } from '@/lib/types';
-import { BoardLegend } from './BoardLegend';
-import { DecayBoard } from './DecayBoard';
-import { DecayPanel } from './DecayPanel';
-import { DelistedControls } from './DelistedControls';
-import { DelistedRegister } from './DelistedRegister';
-import { DelistedSearch } from './DelistedSearch';
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { useRouter } from 'next/navigation';
+import type { PreservedRecordsResult } from '@/lib/graveyard/provider';
+import { END_STATES, END_STATE_LABEL } from '@/lib/graveyard/types';
+import { PLATFORM_LABELS, readRegisterState, selectRecordPage, type RegisterState } from '@/lib/graveyard/register';
+import { PlateField, PlatePreview } from './PlateField';
+import { PreservedRegister } from './PreservedRegister';
+import { PreservedInspector } from './PreservedInspector';
+import styles from './PreservedArchive.module.css';
 
-type View = 'board' | 'register';
+const subscribeViewport = (notify: () => void) => { window.addEventListener('resize', notify); return () => window.removeEventListener('resize', notify); };
+const mobileSnapshot = () => window.innerWidth < 768;
+const compactSnapshot = () => window.innerWidth < 1200;
+const serverSnapshot = () => false;
 
-const BAND = 'h-[52dvh] min-h-[340px] md:h-[62dvh]';
-
-export function DelistedClient() {
+export function DelistedClient({ data, initialState }: { data: PreservedRecordsResult; initialState: RegisterState }) {
   const router = useRouter();
-  const pathname = usePathname();
-  const sp = useSearchParams();
-
-  const [isMobile, setIsMobile] = useState(false);
-  const [hovered, setHovered] = useState<string | null>(null);
-  const bandRef = useRef<HTMLDivElement | null>(null);
-  const [anchor, setAnchor] = useState<{ x: number; y: number } | null>(null);
-
-  const field = DELISTED_FIXTURE;
+  const [state, setState] = useState(initialState);
+  const [notice, setNotice] = useState('');
+  const triggerRef = useRef<HTMLElement | null>(null);
+  const mobile = useSyncExternalStore(subscribeViewport, mobileSnapshot, serverSnapshot);
+  const compact = useSyncExternalStore(subscribeViewport, compactSnapshot, serverSnapshot);
+  const view = state.view || (mobile ? 'register' : 'field');
+  const available = data.status === 'illustrative' || data.status === 'catalog';
+  const records = useMemo(() => available ? data.records : [], [available, data]);
+  const result = useMemo(() => selectRecordPage(records, state), [records, state]);
+  const illustrative = data.status === 'illustrative';
 
   useEffect(() => {
-    const mq = window.matchMedia('(max-width: 639px)');
-    const apply = () => setIsMobile(mq.matches);
-    apply();
-    mq.addEventListener('change', apply);
-    return () => mq.removeEventListener('change', apply);
+    const restore = () => { setState(readRegisterState(new URLSearchParams(window.location.search))); setNotice(''); };
+    window.addEventListener('popstate', restore);
+    return () => window.removeEventListener('popstate', restore);
   }, []);
 
-  /* Small screens open on the register — a board you cannot hover is harder to
-     read than a table. The board stays one tap away rather than being removed. */
-  const requested = (sp.get('view') as View | null) ?? null;
-  const view: View = requested ?? (isMobile ? 'register' : 'board');
-  const focusSlug = sp.get('record');
+  function update(change: Partial<RegisterState>, replace = false) {
+    const next = { ...state, ...change };
+    const filtered = selectRecordPage(records, next);
+    if (next.selected && !filtered.selected) { next.selected = ''; setNotice('The previous selection is not on this page.'); }
+    else setNotice('');
+    next.page = filtered.page;
+    setState(next);
+    const params = new URLSearchParams(window.location.search);
+    for (const [key, value] of Object.entries({ q: next.query, state: next.state, platform: next.platform, page: next.page === 1 ? '' : String(next.page), view: next.view, record: next.selected })) {
+      if (value) params.set(key, value); else params.delete(key);
+    }
+    params.delete('endState');
+    if (illustrative) params.set('demo', '1');
+    const url = `/delisted/${params.size ? `?${params}` : ''}`;
+    if (replace) window.history.replaceState(null, '', url); else window.history.pushState(null, '', url);
+  }
+  function select(slug: string, trigger: HTMLElement) { triggerRef.current = trigger; update({ selected: slug }); }
+  function close() { update({ selected: '' }, true); requestAnimationFrame(() => triggerRef.current?.focus({ preventScroll: true })); }
+  const reset = () => update({ query: '', state: '', platform: '', page: 1, selected: '' });
 
-  const filters: DelistedFilters = useMemo(
-    () => ({
-      query: sp.get('q') ?? '',
-      endStates: (sp.get('end')?.split(',').filter(Boolean) ?? []) as EndState[],
-      platforms: (sp.get('platform')?.split(',').filter(Boolean) ?? []) as Platform[],
-    }),
-    [sp],
-  );
-
-  const setParams = useCallback(
-    (patch: Record<string, string | null>, push = false) => {
-      const next = new URLSearchParams(sp.toString());
-      Object.entries(patch).forEach(([k, v]) => {
-        if (v === null || v === '') next.delete(k);
-        else next.set(k, v);
-      });
-      const url = `${pathname}?${next.toString()}`;
-      if (push) router.push(url, { scroll: false });
-      else router.replace(url, { scroll: false });
-    },
-    [router, pathname, sp],
-  );
-
-  const onFilterChange = useCallback(
-    (patch: Partial<DelistedFilters>) => {
-      setParams({
-        ...(patch.query !== undefined ? { q: patch.query || null } : {}),
-        ...(patch.endStates !== undefined ? { end: patch.endStates.join(',') || null } : {}),
-        ...(patch.platforms !== undefined ? { platform: patch.platforms.join(',') || null } : {}),
-      });
-    },
-    [setParams],
-  );
-
-  const platforms = useMemo(
-    () => Array.from(new Set(field.records.map((r) => r.platform))).sort(),
-    [field.records],
-  );
-
-  const matched = useMemo(() => {
-    const q = filters.query.trim().toLowerCase();
-    return field.records.filter((r) => {
-      if (q && !`${r.name} ${r.publisher}`.toLowerCase().includes(q)) return false;
-      if (filters.endStates.length && !filters.endStates.includes(r.endState)) return false;
-      if (filters.platforms.length && !filters.platforms.includes(r.platform)) return false;
-      return true;
-    });
-  }, [field.records, filters]);
-
-  /* Search results lead with the highest decay: if two records match, the one
-     further from retrievable is the one more likely to be looked for. */
-  const results = useMemo(
-    () =>
-      matched
-        .map((r) => ({ r, d: decayIndex(r).index }))
-        .sort((a, b) => b.d - a.d)
-        .map((x) => x.r),
-    [matched],
-  );
-
-  const visible = useMemo(() => new Set(matched.map((r) => r.slug)), [matched]);
-  const focusRecord = useMemo(
-    () => field.records.find((r) => r.slug === focusSlug) ?? null,
-    [field.records, focusSlug],
-  );
-
-  const cohortSize: CohortSize = isMobile ? 'year' : 'half';
-
-  /* Where the leader line terminates: the top-left corner of the panel. */
-  useEffect(() => {
-    const el = bandRef.current;
-    if (!el || isMobile) return;
-    const set = () => {
-      const r = el.getBoundingClientRect();
-      setAnchor({ x: r.width - 420, y: 24 });
-    };
-    set();
-    const ro = new ResizeObserver(set);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, [isMobile]);
-
-  const onSelect = useCallback(
-    (slug: string | null) => {
-      setParams({ record: slug, view: 'board' }, slug !== null);
-    },
-    [setParams],
-  );
-
-  const onSelectFromRegister = useCallback(
-    (slug: string) => {
-      setParams({ record: slug, view: 'board' }, true);
-    },
-    [setParams],
-  );
-
-  const closePanel = useCallback(() => setParams({ record: null }), [setParams]);
-
-  const tabHref = (v: View) => {
-    const next = new URLSearchParams(sp.toString());
-    next.set('view', v);
-    next.delete('record');
-    return `${pathname}?${next.toString()}`;
-  };
-
-  return (
-    <div className="mx-auto max-w-7xl px-6 pb-24 md:px-8">
-      <nav aria-label="Delisted views" className="mt-9 flex gap-7 border-b border-border">
-        {(['board', 'register'] as View[]).map((v) => (
-          <Link
-            key={v}
-            href={tabHref(v)}
-            scroll={false}
-            aria-current={view === v ? 'page' : undefined}
-            className={`-mb-px border-b pb-3 font-mono text-[11px] uppercase tracking-[0.16em] transition-colors ${
-              view === v
-                ? 'border-accent-strong text-foreground'
-                : 'border-transparent text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            {v === 'board' ? 'Board' : 'Register'}
-          </Link>
-        ))}
-      </nav>
-
-      <div className="mt-8">
-        <DelistedSearch
-          query={filters.query}
-          matched={matched.length}
-          total={field.total}
-          results={results}
-          onQuery={(q) => onFilterChange({ query: q })}
-          onSelect={onSelectFromRegister}
-        />
+  return <div className={styles.archive}>
+    <header className={styles.intro}>
+      <div className={styles.eyebrow}><span>Delisted</span><span>A record of what remained</span></div>
+      <div className={styles.introGrid}><h1>The record<br />outlives the source.</h1><p>Inspect the last recorded state of datasets whose sources were superseded, gated, withdrawn, or could no longer be reached.</p></div>
+    </header>
+    {!available ? <section className={styles.unavailable} aria-labelledby="history-availability">
+      <PlatePreview />
+      <div><span className={styles.demoBadge}>Illustrative composition</span><h2 id="history-availability">{data.status === 'error' ? 'The archive could not be loaded.' : 'message' in data ? data.message : 'The archive is unavailable.'}</h2><p>{data.status === 'error' ? data.message : 'The live catalog does not supply preserved historical records yet. Explore an example of how those records will be presented.'}</p>
+      {data.status === 'error' ? <button type="button" className={styles.action} onClick={() => router.refresh()}>Try again</button> : <Link className={styles.action} href="/delisted/?demo=1">View an example <span aria-hidden="true">↗</span></Link>}
+      <Link className={styles.quietLink} href="/explore/">Explore the current catalog →</Link></div>
+    </section> : <section className={styles.workspace} aria-label="Preserved record browser">
+      {illustrative && <div className={styles.demoNotice}><span className={styles.demoBadge}>Illustrative records</span><p>Fictional datasets and publishers. Dates, states and checks demonstrate the interface.</p></div>}
+      <div className={styles.controls}>
+        <form className={styles.search} action="/delisted/" onSubmit={event => { event.preventDefault(); update({ page: 1 }, true); }}>
+          <label htmlFor="preserved-query">Find a preserved record</label><div><svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5" stroke="currentColor" strokeWidth="1.3" /><path d="m13 13 4 4" stroke="currentColor" strokeWidth="1.3" /></svg><input id="preserved-query" name="q" value={state.query} placeholder="Dataset or publisher" onChange={event => update({ query: event.target.value, page: 1 }, true)} /><button type="submit" aria-label="Search preserved records">↵</button></div>
+        </form>
+        <label className={styles.select}>Observed state<select value={state.state} onChange={event => update({ state: event.target.value as RegisterState['state'], page: 1 })}><option value="">All states</option>{END_STATES.map(value => <option key={value} value={value}>{END_STATE_LABEL[value]}</option>)}</select></label>
+        <label className={styles.select}>Platform<select value={state.platform} onChange={event => update({ platform: event.target.value as RegisterState['platform'], page: 1 })}><option value="">All platforms</option>{Object.entries(PLATFORM_LABELS).filter(([value]) => records.some(record => record.platform === value)).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
       </div>
-
-      <div className="mt-7">
-        <DelistedControls filters={filters} platforms={platforms} onChange={onFilterChange} />
+      <div className={styles.toolbar}><div role="group" aria-label="Record view" className={styles.viewToggle}><button type="button" aria-pressed={view === 'field'} onClick={() => update({ view: 'field' })}><span aria-hidden="true">▥</span> Field</button><button type="button" aria-pressed={view === 'register'} onClick={() => update({ view: 'register' })}><span aria-hidden="true">☰</span> Register</button></div><p>Last confirmed · newest first</p><span className={styles.resultCount} aria-live="polite">{result.records.length} of {result.total} {illustrative ? 'examples' : 'records'} · Page {result.page}</span></div>
+      {(state.query || state.state || state.platform) && <div className={styles.activeFilters}><span>Filtered results</span><button type="button" onClick={reset}>Clear filters ×</button></div>}
+      <p className={styles.srOnly} role="status">{notice}{result.total === 0 ? ' No matching records.' : ''}</p>
+      <div className={styles.browserGrid}>
+        <div className={styles.resultRegion}>
+          {result.total ? view === 'field' ? <PlateField records={result.records} selected={result.selected?.slug ?? ''} onSelect={select} /> : <PreservedRegister records={result.records} selected={result.selected?.slug ?? ''} onSelect={select} /> : <div className={styles.empty}><span aria-hidden="true">∅</span><h2>{records.length ? 'No records match these filters.' : 'No preserved records yet.'}</h2><p>{records.length ? 'Try another name, observed state, or platform.' : 'The archive is connected. A record will appear here when a preserved observation is available.'}</p>{records.length > 0 && <button type="button" className={styles.action} onClick={reset}>Clear filters</button>}</div>}
+          {result.total > 0 && <div className={styles.pagination}><p>{(result.page - 1) * 24 + 1}–{(result.page - 1) * 24 + result.records.length} of {result.total}{illustrative ? ' illustrative records' : ' records'}</p><div><button type="button" disabled={result.page === 1} onClick={() => update({ page: result.page - 1, selected: '' })}>← Previous</button><span>{result.page} / {result.pages}</span><button type="button" disabled={result.page === result.pages} onClick={() => update({ page: result.page + 1, selected: '' })}>Next →</button></div></div>}
+        </div>
+        <PreservedInspector record={result.selected} illustrative={illustrative} asOf={data.asOf} compact={compact} onClose={close} />
       </div>
-
-      {view === 'board' ? (
-        <>
-          <div ref={bandRef} className={`relative mt-10 w-full ${BAND}`}>
-            <DecayBoard
-              records={field.records}
-              visible={visible}
-              hovered={hovered}
-              focused={focusSlug}
-              cohortSize={cohortSize}
-              interactive={!isMobile}
-              panelAnchor={anchor}
-              onHover={setHovered}
-              onSelect={onSelect}
-            />
-
-            {hovered && !focusSlug && !isMobile && <HoverCard slug={hovered} />}
-
-            {focusRecord && !isMobile && (
-              <div className="absolute right-0 top-6 z-10 h-[calc(100%-1.5rem)] w-[420px]">
-                <DecayPanel record={focusRecord} onClose={closePanel} />
-              </div>
-            )}
-
-            {matched.length === 0 && (
-              <p className="pointer-events-none absolute inset-x-0 top-1/2 text-center font-mono text-[12px] text-muted-foreground">
-                No delisted records match. Clear the search to see the full board.
-              </p>
-            )}
-          </div>
-
-          <div className="mt-10">
-            <BoardLegend />
-          </div>
-
-          <div className="mt-14">
-            <DelistedRegister
-              records={matched}
-              focusSlug={focusSlug}
-              hovered={hovered}
-              onHover={setHovered}
-              onSelect={onSelectFromRegister}
-            />
-          </div>
-        </>
-      ) : (
-        <div className="mt-10">
-          <DelistedRegister
-            records={matched}
-            focusSlug={focusSlug}
-            hovered={hovered}
-            onHover={setHovered}
-            onSelect={onSelectFromRegister}
-          />
-        </div>
-      )}
-
-      {focusRecord && isMobile && (
-        <div className="fixed inset-x-0 bottom-0 z-40 h-[72dvh] border-t border-border-strong bg-surface-elevated">
-          <DecayPanel record={focusRecord} onClose={closePanel} />
-        </div>
-      )}
-    </div>
-  );
-}
-
-/** Minimal hover readout. The panel is where detail lives; this only identifies. */
-function HoverCard({ slug }: { slug: string }) {
-  const record = DELISTED_FIXTURE.records.find((r) => r.slug === slug);
-  if (!record) return null;
-  const result = decayIndex(record);
-  return (
-    <div className="pointer-events-none absolute left-0 top-0 z-10 border border-border-strong bg-surface-elevated px-4 py-3">
-      <p className="text-[13px] text-foreground">{record.name}</p>
-      <p className="mt-0.5 font-mono text-[10px] text-muted-foreground">{record.publisher}</p>
-      <p className="tnum mt-2 font-mono text-[11px] text-foreground">
-        Decay {result.index.toFixed(1)}
-        <span className="ml-2 text-muted-foreground">
-          {result.signalsUsed} of {result.signalsTotal} signals
-        </span>
-      </p>
-    </div>
-  );
+      <div className={styles.archiveFootnote}><span>Observation, preserved.</span><p>States describe source availability at an observation. They do not assess a dataset, its publisher, or the right to use its contents. <Link href="/docs/#methodology">Read the methodology ↗</Link></p></div>
+    </section>}
+  </div>;
 }

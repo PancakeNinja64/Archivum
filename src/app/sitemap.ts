@@ -3,14 +3,13 @@ import { getAllSlugs } from "@/lib/api/client";
 
 export const dynamic = "force-static";
 
-// TODO: replace with the real production domain before launch.
-const BASE = "https://archivum.example";
+const BASE = "https://archivum.tech";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const slugs = await getAllSlugs();
-  const staticRoutes = ["", "explore", "docs", "pricing", "publish", "dashboard"].map((p) => ({
+  if (process.env.NEXT_PUBLIC_DATA_SOURCE !== "supabase") return [];
+  const slugs = await getAllSlugs().catch(() => []);
+  const staticRoutes = ["", "explore", "delisted", "docs", "pricing", "publish"].map((p) => ({
     url: `${BASE}/${p ? `${p}/` : ""}`,
-    lastModified: new Date(),
   }));
-  return [...staticRoutes, ...slugs.map((s) => ({ url: `${BASE}/datasets/${s}/`, lastModified: new Date() }))];
+  return [...staticRoutes, ...slugs.map((s) => ({ url: `${BASE}/datasets/${s}/` }))];
 }
