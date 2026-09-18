@@ -195,7 +195,7 @@ export function AdminClient({ adminEmail }: { adminEmail: string }) {
 
   return (
     <div className="mx-auto max-w-6xl px-6 pb-24 pt-28 md:px-8">
-      <h1 className="font-serif text-4xl leading-[1.08] tracking-[-0.03em] text-accent">Admin</h1>
+      <h1 className="font-medium text-4xl leading-[1.08] tracking-[-0.03em] text-foreground">Admin</h1>
       <p className="mt-2 font-mono text-[12px] text-muted-foreground">{adminEmail}</p>
 
       {/* Import */}

@@ -1,0 +1,40 @@
+.surface{background:#0c0d0f;color:#f3f3f0;padding:96px 40px 110px;scroll-margin-top:-24px}
+.inner{max-width:1360px;margin:0 auto;display:grid;grid-template-columns:minmax(300px,.8fr) minmax(0,1.2fr);gap:60px;align-items:start}
+.chapter{font:10.5px var(--font-geist-mono),ui-monospace,monospace;letter-spacing:.1em;text-transform:uppercase;color:#4da3ff}
+.lead h2{font-size:clamp(34px,3.6vw,54px);line-height:1;font-weight:450;letter-spacing:-.05em;margin:12px 0 18px}
+.lead>p{font-size:15.5px;line-height:1.6;color:#a8adb4;max-width:40ch;margin:0 0 26px}
+.actions{display:flex;flex-wrap:wrap;gap:14px 22px;align-items:center;margin-bottom:22px}
+.primary{display:inline-flex;align-items:center;gap:18px;background:#f3f3f0;color:#0c0d0f;border-radius:3px;padding:0 18px;min-height:46px;font-size:13.5px;transition:background 160ms,color 160ms}
+.primary:hover{background:#4da3ff;color:#0c0d0f}
+.secondary{display:inline-flex;align-items:center;min-height:36px;font-size:13.5px;color:#f3f3f0;border-bottom:1px solid #ffffff42}
+.secondary:hover{color:#4da3ff;border-color:#4da3ff}
+.caveat{font-size:12.5px;line-height:1.6;color:#8a9098;max-width:44ch}
+.sheet{background:#f3f3f0;color:#0c0d0f;border-radius:3px;box-shadow:inset 1px 1px 0 #ffffffb0,18px 30px 70px #00000080,0 0 0 1px #00000040;overflow:hidden}
+.sheetHead{padding:24px 28px 22px;border-bottom:1px solid #cccecc}
+.sheetMeta{display:flex;justify-content:space-between;gap:16px;font:10.5px var(--font-geist-mono),ui-monospace,monospace;letter-spacing:.09em;text-transform:uppercase;color:#555b63;margin-bottom:16px}
+.sheetMeta .mono{text-transform:none;letter-spacing:0}
+.sheetHead h3{font-size:clamp(24px,2.4vw,34px);line-height:1.08;font-weight:500;letter-spacing:-.035em;margin:0 0 8px;overflow-wrap:anywhere}
+.publisher{font-size:13.5px;color:#555b63;margin:0 0 14px}
+.description{font-size:14.5px;line-height:1.6;margin:0;max-width:62ch}
+.mono{font-family:var(--font-geist-mono),ui-monospace,monospace;font-size:11.5px;letter-spacing:.01em}
+.coverage{padding:22px 28px 24px;border-bottom:1px solid #cccecc;display:grid;grid-template-columns:auto 1fr;gap:28px;align-items:start}
+.coverageHead{display:grid;gap:8px;min-width:150px}
+.coverageHead strong{font-size:44px;line-height:1;font-weight:450;letter-spacing:-.05em;font-variant-numeric:tabular-nums}
+.coverageHead strong small{font-size:16px;margin-left:2px}
+.coverageHead>span{font-size:12.5px;line-height:1.45;color:#555b63}
+.sections{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:16px 28px}
+.sectionLine{display:flex;justify-content:space-between;gap:12px;font-size:13px;font-weight:500;letter-spacing:-.01em}
+.meter{height:3px;background:#cccecc;margin:8px 0 7px;overflow:hidden}
+.meter span{display:block;height:100%;background:#0c0d0f}
+.counts{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:11.5px;color:#555b63;margin:0}
+.history{padding:20px 28px 22px}
+.versions{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:0}
+.versions li{display:grid;grid-template-columns:64px 110px 1fr auto;gap:14px;align-items:baseline;padding:10px 0;border-top:1px solid #e0e1de;font-size:12.5px}
+.versions li:first-child{border-top:0}
+.note{color:#0c0d0f;overflow-wrap:anywhere}
+.loading{font-size:13px;color:#555b63;margin:12px 0 0}
+.sheetFoot{display:flex;justify-content:space-between;gap:18px;align-items:center;padding:16px 28px;background:#e8e9e6;font-size:12.5px;color:#555b63}
+.sheetFoot a{color:#1455b3;white-space:nowrap;display:inline-flex;align-items:center;gap:8px;min-height:28px}
+.sheetFoot a:hover{color:#0c0d0f}
+@media(max-width:1179px){.surface{padding:72px 24px 80px}.inner{grid-template-columns:1fr;gap:36px}.sheet{max-width:760px}}
+@media(max-width:640px){.surface{padding:60px 20px 64px}.sheetHead,.coverage,.history,.sheetFoot{padding-left:20px;padding-right:20px}.coverage{grid-template-columns:1fr;gap:18px}.sections{grid-template-columns:1fr}.versions li{grid-template-columns:1fr 1fr;row-gap:4px}.versions li .note{grid-column:1/-1}.sheetFoot{flex-direction:column;align-items:flex-start}}

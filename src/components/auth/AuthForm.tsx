@@ -69,7 +69,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
       <p className="text-xs text-muted-foreground">ILLUSTRATIVE CATALOG</p>
       <h1 className="mt-4 text-4xl font-medium tracking-tight text-foreground">{c.title}</h1>
       <p className="mt-5 text-base leading-relaxed text-muted-foreground">Accounts are unavailable in this local demonstration. You can explore every sample dataset without signing in.</p>
-      <Link href="/explore/" className="mt-6 inline-flex min-h-11 items-center text-accent">Explore datasets →</Link>
+      <Link href="/workspace/" className="mt-6 inline-flex min-h-11 items-center text-accent">Open the workspace →</Link>
     </div>
   );
   const canSubmit =
@@ -80,7 +80,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
 
   return (
     <div className="mx-auto max-w-md px-6 pb-24 pt-32 md:px-8">
-      <h1 className="font-serif text-4xl leading-[1.08] tracking-[-0.03em] text-accent">{c.title}</h1>
+      <h1 className="font-medium text-4xl leading-[1.08] tracking-[-0.03em] text-foreground">{c.title}</h1>
       <p className="mt-3 text-base leading-relaxed text-muted-foreground">{c.blurb}</p>
 
       {state === "done" ? (

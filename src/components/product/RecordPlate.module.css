@@ -1,0 +1,61 @@
+/* The record plate: a mineral object on the graphite stage. Light from the upper left. */
+.plate{--plate:#f3f3f0;--ink:#0c0d0f;--ink-2:#555b63;--ink-3:#8a9098;--rule:#cccecc;--action:#1455b3;
+  position:relative;width:100%;max-width:560px;background:var(--plate);color:var(--ink);border-radius:3px;
+  box-shadow:inset 1px 1px 0 #ffffffb0,0 20px 50px #00000059,0 0 0 1px #00000040;z-index:4}
+.marker{position:absolute;left:-6px;top:32px;width:12px;height:12px;border-radius:50%;background:#4da3ff;box-shadow:0 0 0 3px var(--plate),0 0 0 4px #4da3ff66;z-index:2}
+.head{padding:18px 20px 14px;position:relative}
+.eyebrow{display:flex;align-items:center;font:10.5px var(--font-geist-mono),ui-monospace,monospace;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-2);margin-bottom:14px}
+.name{font-size:21px;line-height:1.12;font-weight:500;letter-spacing:-.03em;margin:0 0 6px;overflow-wrap:anywhere}
+.publisher{font-size:13px;color:var(--ink-2);margin:0 0 14px}
+.coverage{display:flex;gap:12px;align-items:flex-start;margin:0;border-top:1px solid var(--rule);padding-top:12px}
+.coverage strong{font-size:30px;line-height:1;font-weight:450;letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+.coverage strong small{font-size:13px;margin-left:2px}
+.coverage>span{font-size:12px;line-height:1.4;color:var(--ink-2);padding-top:2px}
+.mono{font-family:var(--font-geist-mono),ui-monospace,monospace;font-size:11px;letter-spacing:.01em}
+.rows{list-style:none;margin:0;padding:0;transform-style:preserve-3d}
+.row{position:relative;--lift:0}
+.rowLink{display:block;color:inherit;text-decoration:none;transform-style:preserve-3d}
+.card{background:var(--plate);border-top:1px solid var(--rule)}
+.rowLink:hover .card,.rowLink:focus-visible .card{background:#ffffff}
+.rowLink:focus-visible{outline:2px solid var(--action);outline-offset:2px;border-radius:2px}
+.cardInner{padding:12px 20px 16px}
+.seedLine{display:grid;grid-template-columns:auto 1fr;column-gap:10px;align-items:baseline}
+.rowIndex{font:10.5px var(--font-geist-mono),ui-monospace,monospace;color:var(--ink-3);letter-spacing:.06em}
+.rowTitle{font-size:13.5px;font-weight:500;letter-spacing:-.01em}
+.seed{grid-column:1/-1;font-size:12.5px;line-height:1.35;color:var(--ink-2);margin-top:2px;overflow-wrap:anywhere}
+.facts{list-style:none;margin:12px 0 0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:10px 18px}
+.fact{display:grid;grid-template-columns:1fr auto;column-gap:8px;align-items:center;font-size:12.5px;line-height:1.35}
+.factLabel{color:var(--ink-2);font-size:11.5px}
+.factValue{grid-column:1;grid-row:2;color:var(--ink);overflow-wrap:anywhere}
+.factValue.mono{font-size:11.5px}
+.factMark{grid-column:2;grid-row:1/3;width:7px;height:7px;border-radius:50%;background:var(--ink);align-self:center}
+.fact[data-state=reported] .factMark{background:linear-gradient(90deg,var(--ink) 50%,transparent 50%);box-shadow:inset 0 0 0 1px var(--ink)}
+.fact[data-state=unresolved] .factMark{background:transparent;box-shadow:inset 0 0 0 1px var(--ink-3)}
+.fact[data-state=unresolved] .factValue{color:var(--ink-3)}
+.fact[data-state=pending] .factMark{background:transparent;box-shadow:inset 0 0 0 1px var(--rule)}
+.fact[data-state=pending] .factValue{color:var(--ink-3)}
+.rowAction{display:block;margin-top:12px;font-size:11.5px;color:var(--action)}
+.actionWrap{border-top:1px solid var(--rule)}
+.action{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:0 20px;min-height:46px;font-size:13px;color:var(--action);text-decoration:none;border-radius:0 0 3px 3px;transition:background 160ms}
+.action:hover{background:#e7effc}
+.action:focus-visible{outline:2px solid var(--action);outline-offset:-3px}
+.srOnly{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+/* Choreography: the plate docks beside the globe, travels to the resolved node, and fans its rows into layers. */
+@media (min-width:1180px) and (min-height:600px) and (prefers-reduced-motion:no-preference) and (max-height:760px){
+  .plate{top:10% !important}
+}
+@media (min-width:1180px) and (min-height:600px) and (prefers-reduced-motion:no-preference){
+  .plate{position:absolute;right:40px;top:17%;width:300px;max-width:none;background:transparent;box-shadow:none;transform-style:preserve-3d;--spread:0}
+  /* The plate's own body fades as its rows leave; the head and each card then carry their own material. */
+  .plate:before{content:"";position:absolute;inset:0;border-radius:3px;background:var(--plate);box-shadow:inset 1px 1px 0 #ffffffb0,18px 28px 64px #00000080,0 0 0 1px #00000040;opacity:calc(1 - var(--spread));pointer-events:none;transform:translateZ(-2px)}
+  .head{background:var(--plate);border-radius:3px 3px 0 0;box-shadow:inset 1px 1px 0 rgba(255,255,255,calc(var(--spread) * .7)),calc(var(--spread) * 18px) calc(var(--spread) * 28px) calc(var(--spread) * 64px) rgba(0,0,0,calc(var(--spread) * .5)),0 0 0 1px rgba(0,0,0,calc(var(--spread) * .25))}
+  .actionWrap{background:transparent}
+  .rows{transform-style:preserve-3d}
+  .row{height:56px;transform-style:preserve-3d}
+  .card{position:absolute;left:0;top:0;width:100%;height:56px;overflow:hidden;border-radius:calc(var(--lift) * 3px);transform-origin:50% 50%;
+    box-shadow:inset 1px 1px 0 rgba(255,255,255,calc(var(--lift) * .9)),calc(var(--lift) * 14px) calc(var(--lift) * 22px) calc(var(--lift) * 48px) rgba(0,0,0,calc(var(--lift) * .5)),0 0 0 1px rgba(0,0,0,calc(var(--lift) * .35))}
+  .cardInner{padding:10px 46px 14px 20px}
+  .row[data-open=false] .seed{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .facts{grid-template-columns:1fr;gap:8px;padding-right:0}
+}

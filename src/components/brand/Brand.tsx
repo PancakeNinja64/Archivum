@@ -9,7 +9,10 @@ function assetUrl(src: string | { src: string }) {
 /** Official outlined assets; no font substitution or redrawing of the wordmark. */
 export function BrandWordmark() {
   return <span className={styles.wordmark}>
+    {/* SVG wordmarks are official vectors; next/image does not improve them. */}
+    {/* eslint-disable-next-line @next/next/no-img-element */}
     <img src={assetUrl(wordmarkDark)} alt="Archivum" width={680} height={146} className={styles.onLight} fetchPriority="high" />
+    {/* eslint-disable-next-line @next/next/no-img-element */}
     <img src={assetUrl(wordmarkLight)} alt="Archivum" width={680} height={146} className={styles.onDark} />
   </span>;
 }

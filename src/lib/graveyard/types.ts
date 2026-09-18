@@ -7,7 +7,7 @@
  * corrections, privacy complaints — and the copy must never imply otherwise.
  *
  * The decay index measures how far a RECORD has moved from retrievable. It is
- * never a statement about the publisher's conduct. See lib/graveyard/decay.ts.
+ * never a statement about the publisher's conduct.
  */
 
 import type { CheckResult, CoverageDetail } from '@/lib/coverage/rules';
