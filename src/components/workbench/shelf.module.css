@@ -1,0 +1,62 @@
+/* ==========================================================================
+   Research shelf — the records saved on this device, and nothing else.
+   ========================================================================== */
+
+.page {
+  --wb-header: var(--header-height, 64px);
+  --wb-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  --wb-display: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --wb-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100svh - var(--wb-header));
+  padding-top: var(--wb-header);
+  background: var(--background);
+  color: var(--foreground);
+}
+.main { flex: 1; width: 100%; max-width: 1080px; margin: 0 auto; padding: 28px 40px 56px; }
+
+.head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px 32px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+.head h1 { margin-top: 10px; font-family: var(--wb-display); font-size: clamp(30px, 3.4vw, 42px); font-weight: 500; letter-spacing: -0.045em; line-height: 1.05; text-wrap: balance; }
+.head p { max-width: 60ch; margin-top: 10px; font-size: 14px; line-height: 1.6; color: var(--muted-foreground); }
+.toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.toolGroup { display: inline-flex; align-items: center; gap: 4px; padding-left: 10px; border-left: 1px solid var(--border); }
+.toolGroup > span { font-size: 12.5px; color: var(--muted-foreground); margin-right: 4px; }
+.notices { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+
+.list { list-style: none; margin: 8px 0 0; padding: 0; }
+.item {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) auto;
+  gap: 4px 20px;
+  align-items: start;
+  padding: 20px 0;
+  border-bottom: 1px solid var(--border);
+}
+.index { padding-top: 8px; font-family: var(--wb-mono); font-size: 11px; color: var(--muted-foreground); }
+.name { font-family: var(--wb-display); font-size: 26px; font-weight: 500; letter-spacing: -0.04em; line-height: 1.1; color: var(--foreground); overflow-wrap: anywhere; }
+.name:hover { color: var(--accent); }
+.meta { grid-column: 2; display: flex; flex-direction: column; gap: 4px; margin-top: 6px; color: var(--muted-foreground); }
+.who { font-size: 13px; line-height: 1.4; }
+.ids { display: flex; flex-wrap: wrap; gap: 2px 14px; font-family: var(--wb-mono); font-size: 11.5px; }
+.meta strong { font-weight: 400; color: var(--foreground); }
+.itemActions { grid-column: 3; grid-row: 1 / span 2; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 4px; }
+
+.empty { max-width: 560px; padding: 40px 0 0; }
+.empty h2 { font-family: var(--wb-display); font-size: 28px; font-weight: 500; letter-spacing: -0.04em; line-height: 1.1; }
+.empty p { margin-top: 12px; font-size: 14px; line-height: 1.65; color: var(--muted-foreground); }
+.empty p + p { margin-top: 8px; }
+.emptyActions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+
+.foot { margin-top: 20px; max-width: 70ch; font-size: 12.5px; line-height: 1.6; color: var(--muted-foreground); }
+.foot a { color: var(--accent); }
+
+@media (max-width: 899px) {
+  .main { padding: 20px 16px 48px; }
+  /* The tray publishes its height as --wb-tray; anything focused scrolls clear of it. */
+  .main :where(a, button, input, select, summary, [tabindex]) { scroll-margin-bottom: calc(var(--wb-tray, 0px) + 12px); }
+  .item { grid-template-columns: 28px minmax(0, 1fr); }
+  .itemActions { grid-column: 2; grid-row: auto; justify-content: flex-start; margin: 8px 0 0 -8px; }
+  .name { font-size: 22px; }
+  .toolGroup { border-left: 0; padding-left: 0; }
+}

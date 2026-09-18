@@ -1,0 +1,134 @@
+/* ==========================================================================
+   Shortlist tray — "Saved on this device". Restrained, persistent, docked.
+   Empty: one compact line. Filled: the saved records and their controls.
+   Desktop keeps everything on one row; phones stack and fold the chips.
+   ========================================================================== */
+
+.tray {
+  --wb-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  --wb-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  position: sticky;
+  bottom: 0;
+  z-index: 6;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  grid-template-areas: "label middle primary secondary" "status status status status";
+  align-items: center;
+  gap: 0 16px;
+  min-height: 44px;
+  padding: 5px 20px;
+  border-top: 1px solid var(--border-strong);
+  background: color-mix(in srgb, var(--surface) 94%, transparent);
+  backdrop-filter: blur(14px);
+  color: var(--foreground);
+}
+.tray[data-mode="filled"] { padding: 8px 20px; }
+
+.label { grid-area: label; display: flex; align-items: baseline; gap: 8px; white-space: nowrap; }
+.label strong { font-size: 13px; font-weight: 500; }
+.count { font-family: var(--wb-mono); font-size: 11.5px; color: var(--muted-foreground); font-variant-numeric: tabular-nums; }
+
+.hint {
+  grid-area: middle;
+  min-width: 0;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--muted-foreground);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Saved records: chips with the name in sans and the publisher beneath. */
+.items {
+  grid-area: middle;
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+  padding: 1px 0 3px;
+}
+.items::-webkit-scrollbar { height: 4px; }
+.items::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 2px; }
+.item {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  max-width: 280px;
+  min-height: 44px;
+  padding-left: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--background);
+  transition: border-color 160ms var(--wb-ease), background-color 160ms var(--wb-ease);
+}
+.item:hover { border-color: var(--border-strong); }
+.item[data-current] { border-color: var(--accent); background: var(--accent-wash); }
+.item a {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  padding: 6px 6px 6px 0;
+  color: var(--foreground);
+}
+.itemName, .itemWho { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.itemName { font-size: 13px; font-weight: 500; line-height: 1.25; }
+.itemWho { font-size: 12px; line-height: 1.25; color: var(--muted-foreground); }
+.item a:hover .itemName, .item a[aria-current="true"] .itemName { color: var(--accent); }
+.item button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: stretch;
+  width: 36px;
+  border-radius: 0 7px 7px 0;
+  color: var(--muted-foreground);
+  transition: background-color 160ms var(--wb-ease), color 160ms var(--wb-ease);
+}
+.item button:hover { color: var(--foreground); background: var(--surface-elevated); }
+
+.primary { grid-area: primary; display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+.secondary { grid-area: secondary; display: flex; align-items: center; gap: 2px; white-space: nowrap; }
+.brief { display: inline-flex; align-items: center; gap: 2px; padding-right: 6px; margin-right: 4px; border-right: 1px solid var(--border); }
+.brief > span { font-size: 12px; color: var(--muted-foreground); margin: 0 4px 0 2px; }
+.toggle { display: none; }
+
+.status { grid-area: status; margin-top: 6px; font-size: 12px; line-height: 1.5; color: var(--muted-foreground); }
+.status[data-tone="error"] { color: var(--risk); }
+
+@media (pointer: coarse) {
+  .item button { width: 44px; }
+}
+
+/* ---------- Phones: a short bar; the chips and the brief fold behind Show / Hide ---------- */
+
+@media (max-width: 899px) {
+  .tray {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "label primary" "middle middle" "secondary secondary" "status status";
+    gap: 0 8px;
+    min-height: 40px;
+    padding: 4px 12px;
+  }
+  .tray[data-mode="filled"] { padding: 4px 12px 6px; }
+  /* Rows that show carry their own spacing, so folded rows add nothing. */
+  .items, .secondary { margin-top: 6px; }
+  .status { margin-top: 4px; }
+  .tray[data-mode="empty"] { grid-template-areas: "label secondary" "middle middle" "status status"; }
+  .tray[data-mode="reading"] { grid-template-areas: "label label" "middle middle" "status status"; }
+  .label { min-width: 0; min-height: 36px; }
+  .label strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12.5px; }
+  .hint { white-space: normal; font-size: 12px; padding-bottom: 4px; }
+  .primary { gap: 2px; }
+  .primary button, .primary a, .secondary button, .secondary a { padding-left: 8px; padding-right: 8px; }
+  .toggle { display: inline-flex; }
+  .secondary { margin-left: -8px; }
+  .brief { border-right: 0; padding-right: 0; margin-right: 0; }
+  .tray[data-mode="filled"][data-expanded="false"] .items,
+  .tray[data-mode="filled"][data-expanded="false"] .secondary { display: none; }
+  .item { max-width: 240px; }
+}

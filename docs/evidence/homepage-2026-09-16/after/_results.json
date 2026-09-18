@@ -1,0 +1,202 @@
+[
+  {
+    "name": "1440-01-entrance",
+    "file": "docs/evidence/homepage-2026-09-16/after/1440-01-entrance.png",
+    "sw": 1440,
+    "cw": 1440,
+    "sh": 5342,
+    "y": 0,
+    "overflow": false,
+    "consoleErrors": []
+  },
+  {
+    "name": "1440-02-resolving-p32",
+    "file": "docs/evidence/homepage-2026-09-16/after/1440-02-resolving-p32.png",
+    "sw": 1440,
+    "cw": 1440,
+    "sh": 5342,
+    "y": 720,
+    "overflow": false,
+    "consoleErrors": []
+  },
+  {
+    "name": "1440-03-resolved-p50",
+    "file": "docs/evidence/homepage-2026-09-16/after/1440-03-resolved-p50.png",
+    "sw": 1440,
+    "cw": 1440,
+    "sh": 5342,
+    "y": 1125,
+    "overflow": false,
+    "consoleErrors": []
+  },
+  {
+    "name": "1440-04-spreading-p72",
+    "file": "docs/evidence/homepage-2026-09-16/after/1440-04-spreading-p72.png",
+    "sw": 1440,
+    "cw": 1440,
+    "sh": 5342,
+    "y": 1620,
+    "overflow": false,
+    "consoleErrors": []
+  },
+  {
+    "name": "1440-05-evidence-p90",
+    "file": "docs/evidence/homepage-2026-09-16/after/1440-05-evidence-p90.png",
+    "sw": 1440,
+    "cw": 1440,
+    "sh": 5342,
+    "y": 2030,
+    "overflow": false,
+    "consoleErrors": []
+  },
+  {
+    "name": "1440-06-record-surface",
+    "file": "docs/evidence/homepage-2026-09-16/after/1440-06-record-surface.png",
+    "sw": 1440,
+    "cw": 1440,
+    "sh": 5342,
+    "y": 3086,
+    "overflow": false,
+    "consoleErrors": []
+  },
+  {
+    "name": "1440-07-preservation-connected",
+    "file": "docs/evidence/homepage-2026-09-16/after/1440-07-preservation-connected.png",
+    "sw": 1440,
+    "cw": 1440,
+    "sh": 5342,
+    "y": 3831,
+    "overflow": false,
+    "consoleErrors": []
+  },
+  {
+    "name": "1440-08-preservation-preserved",
+    "file": "docs/evidence/homepage-2026-09-16/after/1440-08-preservation-preserved.png",
+    "sw": 1440,
+    "cw": 1440,
+    "sh": 5342,
+    "y": 3831,
+    "overflow": false,
+    "consoleErrors": []
+  },
+  {
+    "name": "1440-09-resolution",
+    "file": "docs/evidence/homepage-2026-09-16/after/1440-09-resolution.png",
+    "sw": 1440,
+    "cw": 1440,
+    "sh": 5342,
+    "y": 4442,
+    "overflow": false,
+    "consoleErrors": []
+  },
+  {
+    "name": "1440-10-reverse-scroll-p32",
+    "file": "docs/evidence/homepage-2026-09-16/after/1440-10-reverse-scroll-p32.png",
+    "sw": 1440,
+    "cw": 1440,
+    "sh": 5342,
+    "y": 720,
+    "overflow": false,
+    "consoleErrors": []
+  },
+  {
+    "name": "1440-11-reduced-motion-top",
+    "file": "docs/evidence/homepage-2026-09-16/after/1440-11-reduced-motion-top.png",
+    "sw": 1440,
+    "cw": 1440,
+    "sh": 3978,
+    "y": 0,
+    "overflow": false,
+    "consoleErrors": []
+  },
+  {
+    "name": "1440-12-dark-theme-record-surface",
+    "file": "docs/evidence/homepage-2026-09-16/after/1440-12-dark-theme-record-surface.png",
+    "sw": 1440,
+    "cw": 1440,
+    "sh": 5342,
+    "y": 3086,
+    "overflow": false,
+    "consoleErrors": []
+  },
+  {
+    "name": "1280x720-01-entrance",
+    "file": "docs/evidence/homepage-2026-09-16/after/1280x720-01-entrance.png",
+    "sw": 1280,
+    "cw": 1280,
+    "sh": 4691,
+    "y": 0,
+    "overflow": false,
+    "consoleErrors": []
+  },
+  {
+    "name": "1280x720-02-resolved-p50",
+    "file": "docs/evidence/homepage-2026-09-16/after/1280x720-02-resolved-p50.png",
+    "sw": 1280,
+    "cw": 1280,
+    "sh": 4691,
+    "y": 900,
+    "overflow": false,
+    "consoleErrors": []
+  },
+  {
+    "name": "1280x720-03-evidence-p90",
+    "file": "docs/evidence/homepage-2026-09-16/after/1280x720-03-evidence-p90.png",
+    "sw": 1280,
+    "cw": 1280,
+    "sh": 4691,
+    "y": 1620,
+    "overflow": false,
+    "consoleErrors": []
+  },
+  {
+    "name": "390-01-entrance",
+    "file": "docs/evidence/homepage-2026-09-16/after/390-01-entrance.png",
+    "sw": 390,
+    "cw": 390,
+    "sh": 5908,
+    "y": 0,
+    "overflow": false,
+    "consoleErrors": []
+  },
+  {
+    "name": "390-02-record-card",
+    "file": "docs/evidence/homepage-2026-09-16/after/390-02-record-card.png",
+    "sw": 390,
+    "cw": 390,
+    "sh": 5908,
+    "y": 914,
+    "overflow": false,
+    "consoleErrors": []
+  },
+  {
+    "name": "390-03-preservation",
+    "file": "docs/evidence/homepage-2026-09-16/after/390-03-preservation.png",
+    "sw": 390,
+    "cw": 390,
+    "sh": 5911,
+    "y": 4140,
+    "overflow": false,
+    "consoleErrors": []
+  },
+  {
+    "name": "390-04-full-page",
+    "file": "docs/evidence/homepage-2026-09-16/after/390-04-full-page.png",
+    "sw": 390,
+    "cw": 390,
+    "sh": 5908,
+    "y": 0,
+    "overflow": false,
+    "consoleErrors": []
+  },
+  {
+    "name": "1024x768-flow",
+    "file": "docs/evidence/homepage-2026-09-16/after/1024x768-flow.png",
+    "sw": 1024,
+    "cw": 1024,
+    "sh": 4665,
+    "y": 0,
+    "overflow": false,
+    "consoleErrors": []
+  }
+]

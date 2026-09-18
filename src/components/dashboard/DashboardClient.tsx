@@ -52,14 +52,14 @@ export function DashboardClient() {
   if (live && signedIn === false) {
     return (
       <div className="mx-auto max-w-2xl px-6 pb-24 pt-32 text-center md:px-8">
-        <h1 className="font-serif text-4xl leading-[1.08] tracking-[-0.03em] text-accent">Your saved datasets</h1>
+        <h1 className="font-medium text-4xl leading-[1.08] tracking-[-0.03em] text-foreground">Your saved datasets</h1>
         <p className="mx-auto mt-4 max-w-md text-base leading-relaxed text-muted-foreground">
           Sign in to save datasets and follow how their documentation changes over time —
           licence updates, new versions, and coverage movement, all in one place.
         </p>
         <div className="mt-8 flex justify-center gap-3">
           <Link href="/login/" className="rounded-md bg-accent-strong px-5 py-2.5 text-sm font-medium text-white hover:opacity-90">Sign in</Link>
-          <Link href="/explore/" className="rounded-md border border-border-strong px-5 py-2.5 text-sm text-foreground hover:bg-surface">Browse the catalog</Link>
+          <Link href="/workspace/" className="rounded-md border border-border-strong px-5 py-2.5 text-sm text-foreground hover:bg-surface">Browse the catalog</Link>
         </div>
       </div>
     );
@@ -87,7 +87,7 @@ export function DashboardClient() {
 
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="font-serif text-4xl leading-[1.08] tracking-[-0.03em] text-accent md:text-5xl">Saved datasets</h1>
+          <h1 className="font-medium text-4xl leading-[1.08] tracking-[-0.03em] text-foreground md:text-5xl">Saved datasets</h1>
           <p className="mt-3 text-base text-muted-foreground">
             How the documentation behind your saved datasets is changing at the source.
           </p>
@@ -129,7 +129,7 @@ export function DashboardClient() {
           {watch !== null && watch.length === 0 ? (
             <div className="mt-3 rounded-[10px] border border-border bg-surface p-8 text-center">
               <p className="text-sm text-muted-foreground">Nothing saved yet.</p>
-              <Link href="/explore/" className="link-underline mt-2 inline-block font-mono text-[12px] text-accent-strong dark:text-accent">
+              <Link href="/workspace/" className="link-underline mt-2 inline-block font-mono text-[12px] text-accent-strong dark:text-accent">
                 Browse the catalog and save a dataset →
               </Link>
             </div>

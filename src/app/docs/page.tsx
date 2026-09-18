@@ -22,7 +22,7 @@ const SECTION_ORDER: CoverageSectionKey[] = ["origin", "licensing", "composition
 
 function H2({ id, children }: { id: string; children: React.ReactNode }) {
   return (
-    <h2 id={id} className="scroll-mt-32 border-t border-border pt-12 font-serif text-3xl tracking-[-0.02em] text-accent first:border-0 first:pt-0">
+    <h2 id={id} className="scroll-mt-32 border-t border-border pt-12 font-medium text-3xl tracking-[-0.02em] text-foreground first:border-0 first:pt-0">
       {children}
     </h2>
   );
@@ -46,7 +46,7 @@ export default function DocsPage() {
       </aside>
 
       <article className="min-w-0 max-w-3xl flex-1">
-        <h1 className="font-serif text-4xl leading-[1.08] tracking-[-0.03em] text-accent md:text-5xl">Documentation</h1>
+        <h1 className="font-medium text-4xl leading-[1.08] tracking-[-0.03em] text-foreground md:text-5xl">Documentation</h1>
         <p className="mt-4 text-base leading-relaxed text-muted-foreground">
           Archivum is a catalog of public AI datasets with a consistent record of what
           each one documents about itself. This page explains exactly how those records
@@ -59,7 +59,7 @@ export default function DocsPage() {
           <H2 id="quickstart">Quickstart</H2>
           <p className="mt-5 leading-relaxed text-muted-foreground">
             Search is free and needs no account —{" "}
-            <Link href="/explore/" className="link-underline text-accent-strong dark:text-accent">explore the catalog</Link>{" "}
+            <Link href="/workspace/" className="link-underline text-accent-strong dark:text-accent">open the workspace</Link>{" "}
             and open any dataset for its full record: origin, licensing, structure, and lineage as documented at the source.
           </p>
           <div className="mt-5">

@@ -1,12 +1,35 @@
-import { getDatasets, getFeatured, getFacets, getDataset } from "@/lib/api/client";
-import { ArchiveHome } from "@/components/home/ArchiveHome";
+import { getDataset, getDatasets, getPreservedRecords, dataMode } from "@/lib/api/client";
+import { ProductHome } from "@/components/product/ProductHome";
+import { chooseFeatured } from "@/components/product/atlas/geometry";
+import type { DelistedRecord } from "@/lib/graveyard/types";
+
 export const revalidate = 60;
+
+/** The preservation example is always the illustrative fixture, labelled as such on the page. */
+function choosePreserved(records: DelistedRecord[]): DelistedRecord | null {
+  const gone = records.filter((r) => r.endState === 'unreachable');
+  const pool = gone.length ? gone : records.filter((r) => r.endState === 'withdrawn');
+  return pool.sort((a, b) => b.coverageTotal - a.coverageTotal)[0] ?? records[0] ?? null;
+}
+
 export default async function Home() {
-  const [featuredResult, facetsResult, recordsResult] = await Promise.allSettled([getFeatured(6), getFacets(), getDatasets({ pageSize: 80, sort: "name" })]);
-  const featured = featuredResult.status === "fulfilled" ? featuredResult.value : [];
-  const facets = facetsResult.status === "fulfilled" ? facetsResult.value : null;
-  const records = recordsResult.status === "fulfilled" ? recordsResult.value.items : featured;
-  const initialSlug = featured[0]?.slug ?? records[0]?.slug;
-  const initialDataset = initialSlug ? await getDataset(initialSlug).catch(() => null) : null;
-  return <ArchiveHome featured={featured} records={records} initialDataset={initialDataset} catalogCount={facets?.total ?? null} platformCount={facets?.platforms.length ?? null} unavailable={featuredResult.status === "rejected" || facetsResult.status === "rejected" || recordsResult.status === "rejected"} />;
+  const result = await getDatasets({ pageSize: 80, sort: "coverage" }).catch(() => null);
+  const records = result?.items ?? [];
+  const featuredSummary = chooseFeatured(records);
+  const [featured, preservedResult] = await Promise.all([
+    featuredSummary ? getDataset(featuredSummary.slug).catch(() => null) : Promise.resolve(null),
+    getPreservedRecords(process.env.NEXT_PUBLIC_DATA_SOURCE, true).catch(() => null),
+  ]);
+  const preserved = preservedResult && (preservedResult.status === 'illustrative' || preservedResult.status === 'catalog') ? choosePreserved(preservedResult.records) : null;
+  return (
+    <ProductHome
+      records={records}
+      featured={featured}
+      featuredSummary={featuredSummary}
+      preserved={preserved}
+      total={result?.total ?? null}
+      mode={dataMode}
+      unavailable={result === null}
+    />
+  );
 }

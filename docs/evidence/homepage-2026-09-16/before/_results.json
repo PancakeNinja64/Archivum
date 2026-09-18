@@ -1,0 +1,83 @@
+[
+  {
+    "name": "1440-hero",
+    "file": "docs/evidence/homepage-2026-09-16/before/1440-hero.png",
+    "sw": 1440,
+    "cw": 1440,
+    "sh": 5045,
+    "y": 0,
+    "overflow": false
+  },
+  {
+    "name": "1440-journey-source",
+    "file": "docs/evidence/homepage-2026-09-16/before/1440-journey-source.png",
+    "sw": 1440,
+    "cw": 1440,
+    "sh": 5045,
+    "y": 835,
+    "overflow": false
+  },
+  {
+    "name": "1440-journey-evidence",
+    "file": "docs/evidence/homepage-2026-09-16/before/1440-journey-evidence.png",
+    "sw": 1440,
+    "cw": 1440,
+    "sh": 5045,
+    "y": 1870,
+    "overflow": false
+  },
+  {
+    "name": "1440-journey-perspective",
+    "file": "docs/evidence/homepage-2026-09-16/before/1440-journey-perspective.png",
+    "sw": 1440,
+    "cw": 1440,
+    "sh": 5045,
+    "y": 2725,
+    "overflow": false
+  },
+  {
+    "name": "1440-research",
+    "file": "docs/evidence/homepage-2026-09-16/before/1440-research.png",
+    "sw": 1440,
+    "cw": 1440,
+    "sh": 5045,
+    "y": 3111,
+    "overflow": false
+  },
+  {
+    "name": "1440-archive",
+    "file": "docs/evidence/homepage-2026-09-16/before/1440-archive.png",
+    "sw": 1440,
+    "cw": 1440,
+    "sh": 5045,
+    "y": 3925,
+    "overflow": false
+  },
+  {
+    "name": "1280x720-hero",
+    "file": "docs/evidence/homepage-2026-09-16/before/1280x720-hero.png",
+    "sw": 1280,
+    "cw": 1280,
+    "sh": 4373,
+    "y": 0,
+    "overflow": false
+  },
+  {
+    "name": "390-hero",
+    "file": "docs/evidence/homepage-2026-09-16/before/390-hero.png",
+    "sw": 441,
+    "cw": 390,
+    "sh": 6383,
+    "y": 0,
+    "overflow": true
+  },
+  {
+    "name": "390-full",
+    "file": "docs/evidence/homepage-2026-09-16/before/390-full.png",
+    "sw": 441,
+    "cw": 390,
+    "sh": 6383,
+    "y": 0,
+    "overflow": true
+  }
+]

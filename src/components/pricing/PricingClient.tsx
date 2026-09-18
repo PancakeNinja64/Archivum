@@ -14,7 +14,7 @@ const tiers = [
     who: "Everyone — searching the catalog needs no account",
     features: ["Full search across the catalog", "Documentation Coverage with all 28 checks", "Lineage viewing", "Licence terms as published", "Save up to 50 datasets"],
     cta: "Explore datasets",
-    href: "/explore/",
+    href: "/workspace/",
     highlight: false,
     available: true,
   },
@@ -56,7 +56,7 @@ export function PricingClient() {
   return (
     <div className="mx-auto max-w-6xl px-6 pb-24 pt-28 md:px-8">
       <header className="max-w-2xl">
-        <h1 className="font-serif text-4xl leading-[1.08] tracking-[-0.03em] text-accent md:text-5xl">
+        <h1 className="font-medium text-4xl leading-[1.08] tracking-[-0.03em] text-foreground md:text-5xl">
           Free to search. Paid tiers coming soon.
         </h1>
         <p className="mt-4 text-base leading-relaxed text-muted-foreground md:text-lg">
@@ -111,7 +111,7 @@ export function PricingClient() {
       </p>
 
       <section className="mt-20 max-w-3xl">
-        <h2 className="font-serif text-3xl tracking-[-0.02em] text-accent">Questions worth asking</h2>
+        <h2 className="font-medium text-3xl tracking-[-0.02em] text-foreground">Questions worth asking</h2>
         <ul className="mt-6 divide-y divide-border border-y border-border">
           {faqs.map(([q, a], i) => (
             <li key={q}>

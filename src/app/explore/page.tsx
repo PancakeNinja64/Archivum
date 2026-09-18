@@ -1,12 +1,13 @@
-import { Suspense } from 'react';
-import type { Metadata } from 'next';
-import { ExploreClient } from '@/components/explore/ExploreClient';
-
-export const metadata: Metadata = {
-  title: 'Explore datasets',
-  description: 'Search public AI datasets through their origin, declared licence, lineage, and documentation. Explore the same records in List or Atlas view.',
-};
-
-export default function ExplorePage() {
-  return <Suspense fallback={<div className="mx-auto max-w-7xl px-6 pb-24 pt-32" role="status"><p className="text-sm text-muted-foreground">Loading the index…</p></div>}><ExploreClient /></Suspense>;
+import { redirect } from 'next/navigation';
+export default async function ExplorePage({searchParams}:{searchParams:Promise<Record<string,string|string[]|undefined>>}) {
+  const query=await searchParams;
+  const params=new URLSearchParams();
+  for(const [key,value] of Object.entries(query)) {
+    if(!value)continue;
+    const name=key==='coverage'?'min':key;
+    if(['q','platform','domain','min','sort','page','dataset','tab','modality','license','commercial'].includes(name)) {
+      params.set(name,Array.isArray(value)?value.join(','):value);
+    }
+  }
+  redirect(`/workspace/${params.size?`?${params}`:''}`);
 }

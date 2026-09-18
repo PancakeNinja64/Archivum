@@ -22,7 +22,7 @@ export function AuthMenu({ variant = "desktop" }: { variant?: "desktop" | "mobil
     return () => sub.subscription.unsubscribe();
   }, []);
 
-  if (!live) return <Link href="/dashboard/" className="inline-flex min-h-11 items-center text-[13px] text-muted-foreground hover:text-foreground">Demo workspace ↗</Link>;
+  if (!live) return <Link href="/docs/" className="inline-flex min-h-11 items-center text-[13px] text-muted-foreground hover:text-foreground">Method & docs ↗</Link>;
   if (email === undefined) return <span className="text-xs text-muted-foreground">Account…</span>;
 
   async function signOut() {

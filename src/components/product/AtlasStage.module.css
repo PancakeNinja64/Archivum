@@ -1,0 +1,57 @@
+/* Atlas stage. Flow layout first (phones, short viewports, reduced motion); the scroll
+   choreography is enabled by the same media query as useStageMode.CHOREOGRAPHY_QUERY. */
+.track{position:relative;background:#0c0d0f;color:#f3f3f0;padding:92px 20px 36px;overflow:clip}
+.entrance{display:block}
+.entranceColumn{width:100%;max-width:640px}
+.eyebrow{display:flex;align-items:center;gap:10px;font:10.5px var(--font-geist-mono),ui-monospace,monospace;letter-spacing:.1em;text-transform:uppercase;color:#a8adb4;margin:0 0 22px}
+.eyebrow i{width:6px;height:6px;border-radius:50%;background:#4da3ff;box-shadow:0 0 14px #4da3ff99}
+.title{font-size:clamp(38px,10vw,64px);line-height:.98;font-weight:450;letter-spacing:-.05em;margin:0 0 18px;text-wrap:balance}
+.support{font-size:16px;line-height:1.55;color:#a8adb4;max-width:34ch;margin:0 0 26px}
+.stage{margin-top:28px;display:grid;gap:22px}
+.canvasWrap{position:relative;height:min(360px,84vw)}
+.emptyField{display:grid;place-items:center;text-align:center;height:100%;gap:12px;color:#a8adb4;font-size:14px}
+.emptyField a{color:#4da3ff}
+.copyColumn{display:none}
+.flowCopy{display:grid;gap:8px;max-width:560px}
+.chapter{font:10.5px var(--font-geist-mono),ui-monospace,monospace;letter-spacing:.1em;text-transform:uppercase;color:#4da3ff}
+.copy h2,.flowCopy h2{font-size:clamp(26px,3vw,40px);line-height:1.02;font-weight:450;letter-spacing:-.045em;margin:10px 0 12px}
+.copy p,.flowCopy p{font-size:15px;line-height:1.6;color:#a8adb4;max-width:38ch;margin:0}
+.foot{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px 20px;font:10.5px var(--font-geist-mono),ui-monospace,monospace;letter-spacing:.02em;color:#a8adb4;line-height:1.5}
+.footNote{max-width:52ch}
+.controls{display:flex;align-items:center;gap:16px}
+.controls button{color:#f3f3f0;min-height:36px;padding:0 4px}
+.controls button:disabled{color:#a8adb4}
+.controls button:hover:not(:disabled){color:#4da3ff}
+.hint{display:none}
+.continue{display:inline-flex;align-items:center;gap:8px;min-height:36px;color:#f3f3f0}
+.continue:hover{color:#4da3ff}
+.srOnly{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+/* Wide flow (tablets, small laptops, reduced motion on desktop): two columns, still nothing pinned. */
+@media (min-width:900px){
+  .track{padding:112px 40px 40px}
+  .entranceColumn{max-width:720px}
+  .stage{grid-template-columns:minmax(0,1fr) minmax(320px,520px);gap:24px 48px;align-items:start;margin-top:40px}
+  .canvasWrap{height:min(560px,60vw);grid-row:1/3}
+  .flowCopy{grid-column:2;padding-top:12px}
+  .foot{grid-column:1/-1}
+}
+@media (min-width:1180px) and (min-height:600px) and (prefers-reduced-motion:no-preference){
+  .track{--scroll:250svh;height:calc(100svh + var(--scroll));padding:0}
+  .entrance{position:absolute;top:64px;left:0;right:0;height:calc(100svh - 64px);z-index:6;pointer-events:none;display:flex;align-items:center;padding:0 40px 5vh}
+  .entranceColumn{pointer-events:auto;width:min(560px,40vw)}
+  .title{font-size:clamp(52px,5vw,74px);margin-bottom:20px}
+  .support{font-size:16px;margin-bottom:30px}
+  .stage{position:sticky;top:64px;height:calc(100svh - 64px);margin:0;display:block;overflow:hidden;perspective:1400px;perspective-origin:62% 42%}
+  .canvasWrap{position:absolute;inset:0;height:auto;grid-row:auto}
+  .copyColumn{display:grid;position:absolute;left:40px;top:0;bottom:0;width:min(360px,25vw);align-items:center;pointer-events:none;z-index:3}
+  .copy{grid-area:1/1}
+  .flowCopy{display:none}
+  .foot{position:absolute;left:40px;right:40px;bottom:16px;z-index:5;flex-wrap:nowrap}
+  .hint{display:inline}
+}
+@media (min-width:1180px) and (min-height:600px) and (prefers-reduced-motion:no-preference) and (max-height:760px){
+  .entrance{padding-bottom:2vh}
+  .title{font-size:clamp(44px,4.6vw,60px)}
+  .support{margin-bottom:22px}
+}

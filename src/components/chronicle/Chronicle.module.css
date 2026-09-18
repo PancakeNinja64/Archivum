@@ -1,0 +1,964 @@
+/* ==========================================================================
+   Chronicle — Delisted archive composition
+   Mineral reading surface, graphite framing, restrained signal-blue accents.
+   ========================================================================== */
+
+/* ---------- Page shell ---------- */
+
+.page {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 48px 24px 96px;
+}
+
+@media (min-width: 768px) {
+  .page { padding: 56px 40px 120px; }
+}
+
+/* ---------- Mode banner ---------- */
+
+.modeBanner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  margin-bottom: 32px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--accent-wash);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--foreground);
+}
+
+.modeBannerIcon {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--accent);
+  opacity: 0.5;
+}
+
+.modeBannerLink {
+  color: var(--accent-deep);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.modeBannerLink:hover {
+  text-decoration-thickness: 2px;
+}
+
+/* ---------- Header ---------- */
+
+.header {
+  margin-bottom: 40px;
+}
+
+.eyebrow {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+  margin: 0 0 8px;
+}
+
+.title {
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  font-size: clamp(26px, 4vw, 38px);
+  font-weight: 400;
+  line-height: 1.2;
+  color: var(--foreground);
+  margin: 0 0 12px;
+}
+
+.subtitle {
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--muted-foreground);
+  max-width: 620px;
+  margin: 0;
+}
+
+/* ---------- Filters ---------- */
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.searchWrap {
+  position: relative;
+  flex: 1 1 200px;
+  max-width: 320px;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 15px;
+  height: 15px;
+  color: var(--muted-foreground);
+  pointer-events: none;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 8px 12px 8px 34px;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--foreground);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  outline: none;
+  transition: border-color 150ms;
+}
+
+.searchInput::placeholder {
+  color: var(--muted-foreground);
+  opacity: 0.7;
+}
+
+.searchInput:focus {
+  border-color: var(--accent);
+}
+
+.select {
+  padding: 8px 32px 8px 12px;
+  font-size: 13px;
+  color: var(--foreground);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23888' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  min-width: 120px;
+}
+
+.select:focus {
+  border-color: var(--accent);
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.clearBtn {
+  padding: 8px 14px;
+  font-size: 13px;
+  color: var(--muted-foreground);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  transition: color 150ms, border-color 150ms;
+}
+
+.clearBtn:hover {
+  color: var(--foreground);
+  border-color: var(--border-strong);
+}
+
+.recordCount {
+  margin-left: auto;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted-foreground);
+}
+
+/* ---------- Overview (compact archive fingerprint) ---------- */
+
+.overview {
+  position: relative;
+  margin-bottom: 28px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  padding: 16px 16px 28px;
+  overflow: hidden;
+}
+
+.overviewSvg {
+  display: block;
+  width: 100%;
+}
+
+.overviewAxis {
+  position: absolute;
+  bottom: 6px;
+  left: 16px;
+  right: 16px;
+  display: flex;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.overviewYear {
+  font-size: 10.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted-foreground);
+  opacity: 0.7;
+  position: absolute;
+  transform: translateX(-50%);
+}
+
+/* ---------- Workspace (list + dossier grid) ---------- */
+
+.workspace {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+  min-height: 480px;
+}
+
+@media (min-width: 960px) {
+  .workspace {
+    grid-template-columns: 1fr 420px;
+    gap: 24px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .workspace {
+    grid-template-columns: 1fr 480px;
+  }
+}
+
+/* ---------- List panel ---------- */
+
+.listPanel {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.listPanelHidden {
+  display: none;
+}
+
+@media (min-width: 960px) {
+  .listPanelHidden {
+    display: flex;
+  }
+}
+
+/* Timeline axis */
+
+.timelineAxis {
+  position: relative;
+  height: 20px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+}
+
+.axisTick {
+  position: absolute;
+  bottom: 0;
+  font-size: 10.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted-foreground);
+  transform: translateX(-50%);
+  line-height: 1;
+  padding-bottom: 4px;
+}
+
+.axisTick::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 50%;
+  width: 1px;
+  height: 5px;
+  background: var(--border-strong);
+}
+
+/* Record list */
+
+.recordList {
+  flex: 1;
+  overflow-y: auto;
+  max-height: 720px;
+}
+
+@media (min-width: 960px) {
+  .recordList {
+    max-height: calc(100vh - 280px);
+  }
+}
+
+/* Record row */
+
+.recordRow {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto;
+  gap: 0 12px;
+  padding: 12px 12px 14px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 120ms;
+  position: relative;
+}
+
+.recordRow:hover {
+  background: var(--accent-wash);
+}
+
+.recordRow:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+  border-radius: 4px;
+}
+
+.recordRowSelected {
+  background: var(--accent-wash);
+  border-left: 3px solid var(--accent);
+  padding-left: 9px;
+}
+
+.recordName {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--foreground);
+  line-height: 1.35;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.recordMeta {
+  font-size: 12.5px;
+  color: var(--muted-foreground);
+  line-height: 1.4;
+  grid-column: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.recordBadge {
+  grid-row: 1;
+  grid-column: 2;
+  align-self: start;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  border-radius: 3px;
+  white-space: nowrap;
+  color: var(--surface);
+}
+
+.recordTimeline {
+  grid-column: 1 / -1;
+  position: relative;
+  height: 6px;
+  margin-top: 8px;
+  background: var(--muted);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.recordTimelineBar {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  border-radius: 3px;
+  opacity: 0.65;
+  transition: opacity 150ms;
+}
+
+.recordRow:hover .recordTimelineBar,
+.recordRowSelected .recordTimelineBar {
+  opacity: 1;
+}
+
+.recordCoverage {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  color: var(--muted-foreground);
+  background: var(--surface);
+  padding: 0 0 0 4px;
+}
+
+/* ---------- Dossier panel ---------- */
+
+.dossierPanel {
+  display: none;
+  position: relative;
+}
+
+.dossierPanelVisible {
+  display: block;
+}
+
+@media (min-width: 960px) {
+  .dossierPanel {
+    position: sticky;
+    top: 80px;
+    max-height: calc(100vh - 96px);
+    overflow-y: auto;
+  }
+
+  .dossierPanelVisible {
+    display: block;
+  }
+}
+
+.dossierCard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 24px;
+}
+
+.dossierClose {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--muted-foreground);
+  font-size: 16px;
+  line-height: 1;
+  transition: color 120ms, border-color 120ms;
+}
+
+.dossierClose:hover {
+  color: var(--foreground);
+  border-color: var(--border-strong);
+}
+
+.mobileBack {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 0;
+  margin-bottom: 12px;
+  font-size: 13px;
+  color: var(--accent-deep);
+  background: none;
+  border: none;
+}
+
+.mobileBack:hover {
+  text-decoration: underline;
+}
+
+@media (min-width: 960px) {
+  .mobileBack { display: none; }
+}
+
+.dossierName {
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--foreground);
+  line-height: 1.25;
+  margin: 0 0 4px;
+  padding-right: 36px;
+  letter-spacing: -0.02em;
+}
+
+.dossierPublisher {
+  font-size: 14px;
+  color: var(--muted-foreground);
+  margin: 0 0 16px;
+}
+
+.dossierDivider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 16px 0;
+}
+
+/* Dossier field rows */
+
+.fieldRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 5px 0;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.fieldLabel {
+  color: var(--muted-foreground);
+  flex-shrink: 0;
+  margin-right: 12px;
+}
+
+.fieldValue {
+  color: var(--foreground);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.fieldValueMono {
+  composes: fieldValue;
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 12px;
+}
+
+.stateBadgeLarge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 4px;
+  color: var(--surface);
+}
+
+.stateNote {
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--muted-foreground);
+  font-style: italic;
+  margin: 4px 0 0;
+}
+
+/* Dossier timeline miniature */
+
+.dossierTimeline {
+  position: relative;
+  height: 8px;
+  background: var(--muted);
+  border-radius: 4px;
+  margin: 8px 0 4px;
+  overflow: hidden;
+}
+
+.dossierTimelineBar {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  border-radius: 4px;
+}
+
+.dossierTimelineLabels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted-foreground);
+}
+
+/* ---------- Checks grid ---------- */
+
+.checksSection {
+  margin-top: 16px;
+}
+
+.checksSectionTitle {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+  margin: 0 0 6px;
+}
+
+.checksSectionQuestion {
+  font-size: 12px;
+  color: var(--muted-foreground);
+  opacity: 0.7;
+  margin: 0 0 8px;
+}
+
+.checkRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 0;
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--foreground);
+}
+
+.checkDot {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.checkDotDocumented {
+  background: var(--accent);
+}
+
+.checkDotReported {
+  background: var(--muted-foreground);
+  opacity: 0.6;
+}
+
+.checkDotNotFound {
+  background: transparent;
+  border: 1.5px solid var(--border-strong);
+}
+
+.checkDotNA {
+  background: var(--muted);
+  width: 6px;
+  height: 6px;
+  margin: 0 1px;
+}
+
+.checkLabel {
+  color: var(--foreground);
+}
+
+.checkLabelDim {
+  color: var(--muted-foreground);
+}
+
+.checkMethod {
+  font-size: 12px;
+  color: var(--muted-foreground);
+  opacity: 0.65;
+}
+
+/* ---------- Dependencies ---------- */
+
+.unknownValue {
+  color: var(--muted-foreground);
+  font-style: italic;
+  font-size: 12px;
+}
+
+/* ---------- Source links ---------- */
+
+.sourceLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--accent-deep);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  word-break: break-all;
+}
+
+.sourceLink:hover {
+  text-decoration-thickness: 2px;
+}
+
+/* ---------- Export ---------- */
+
+.exportBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--action-foreground);
+  background: var(--action-fill);
+  border: none;
+  border-radius: 6px;
+  transition: opacity 150ms;
+  margin-top: 8px;
+}
+
+.exportBtn:hover {
+  opacity: 0.88;
+}
+
+/* ---------- Coverage disclaimer ---------- */
+
+.disclaimer {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--muted-foreground);
+  max-width: 640px;
+}
+
+/* ---------- Unavailable state ---------- */
+
+.unavailable {
+  max-width: 560px;
+  margin: 80px auto;
+  text-align: center;
+}
+
+.unavailable h2 {
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--foreground);
+  margin: 0 0 12px;
+}
+
+.unavailable p {
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--muted-foreground);
+  margin: 0 0 24px;
+}
+
+.unavailableLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--action-foreground);
+  background: var(--action-fill);
+  border-radius: 6px;
+  text-decoration: none;
+  transition: opacity 150ms;
+}
+
+.unavailableLink:hover {
+  opacity: 0.88;
+}
+
+.unavailableSecondary {
+  display: block;
+  margin-top: 16px;
+  font-size: 13px;
+  color: var(--accent-deep);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* ---------- Empty / no results ---------- */
+
+.empty {
+  padding: 64px 16px;
+  text-align: center;
+}
+
+.empty p {
+  font-size: 15px;
+  color: var(--muted-foreground);
+  margin: 0;
+}
+
+/* ---------- Loading & error (route files) ---------- */
+
+.loadingPage {
+  max-width: 560px;
+  margin: 80px auto;
+  text-align: center;
+  padding: 24px;
+}
+
+.loadingPage p:first-child {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+  margin: 0 0 8px;
+}
+
+.loadingPage h1 {
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  font-size: 28px;
+  font-weight: 450;
+  letter-spacing: -0.03em;
+  color: var(--foreground);
+  margin: 0 0 20px;
+}
+
+.loadingPage p[role="status"] {
+  font-size: 14px;
+  color: var(--muted-foreground);
+}
+
+.loadingBar {
+  height: 2px;
+  margin-top: 24px;
+  background: var(--muted);
+  border-radius: 1px;
+  overflow: hidden;
+}
+
+.loadingBar::after {
+  content: '';
+  display: block;
+  width: 40%;
+  height: 100%;
+  background: var(--accent);
+  border-radius: 1px;
+  animation: loadSlide 1.4s ease-in-out infinite;
+}
+
+@keyframes loadSlide {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(350%); }
+}
+
+.errorPage {
+  max-width: 560px;
+  margin: 80px auto;
+  text-align: center;
+  padding: 24px;
+}
+
+.errorPage p:first-child {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+  margin: 0 0 8px;
+}
+
+.errorPage h1 {
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--foreground);
+  margin: 0 0 12px;
+}
+
+.errorPage p {
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--muted-foreground);
+  margin: 0 0 24px;
+}
+
+.errorAction {
+  display: inline-flex;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--action-foreground);
+  background: var(--action-fill);
+  border: none;
+  border-radius: 6px;
+  transition: opacity 150ms;
+}
+
+.errorAction:hover {
+  opacity: 0.88;
+}
+
+.errorSecondary {
+  display: block;
+  margin-top: 16px;
+  font-size: 13px;
+  color: var(--accent-deep);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* ---------- Motion ---------- */
+
+.fadeIn {
+  animation: fadeUp 350ms var(--ease-archivum) both;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.dossierReveal {
+  animation: slideIn 280ms var(--ease-archivum) both;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fadeIn,
+  .dossierReveal {
+    animation: none;
+  }
+
+  .loadingBar::after {
+    animation: none;
+    width: 100%;
+    opacity: 0.3;
+  }
+}
+
+/* ---------- Noscript ---------- */
+
+.noscriptSection {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.noscriptRecord {
+  padding-block: 16px;
+  border-bottom: 1px solid var(--border);
+}
+.checkDisclosure{border-bottom:1px solid var(--border)}.checkDisclosure summary{list-style:none;cursor:pointer;min-height:40px}.checkDisclosure summary::-webkit-details-marker{display:none}.checkExplanation{font-size:12px;line-height:1.7;color:var(--muted-foreground);padding:0 12px 14px 22px}.checkDisclosure[open] summary{color:var(--accent)}.dossierPanel{scroll-margin-top:80px}.unavailable h1{font-size:clamp(32px,5vw,60px);letter-spacing:-.05em;line-height:1.1}
+.page{padding-top:104px}.header{display:grid;grid-template-columns:1.1fr 1fr;gap:18px 60px;align-items:end;margin:36px 0}.eyebrow{grid-column:1/-1;font:10px var(--font-mono);font-weight:400}.title{font-family:var(--font-sans),sans-serif;font-style:normal;font-size:clamp(34px,4.5vw,64px);letter-spacing:-.055em;line-height:1.06;max-width:560px;margin:0}.subtitle{font-size:13px;max-width:410px;margin:0}.modeBanner{font-size:13px;color:var(--foreground);border-radius:0;background:transparent;border:0;border-bottom:1px solid var(--border);padding:0 0 18px;margin-bottom:24px}.modeBannerIcon{width:5px;height:5px;opacity:1}.overview{border-radius:0}.recordRow{border-radius:0}.dossierCard{border-radius:2px}.searchInput,.select{border-radius:3px;min-height:44px}.dossierEmpty{display:flex;flex-direction:column;justify-content:center;align-items:flex-start;min-height:360px;padding:40px;border-top:1px solid var(--border);color:var(--muted-foreground)}.dossierEmpty h2{font-size:32px;font-weight:450;letter-spacing:-.04em;color:var(--foreground);margin:16px 0}.dossierEmpty p{font-size:13px;line-height:1.8;max-width:310px}.dossierEmpty>span{font:10px var(--font-mono);letter-spacing:.1em;text-transform:uppercase}
+@media(max-width:959px){.page{padding-top:88px}.header{grid-template-columns:1fr;gap:16px;margin:28px 0}.title{font-size:40px}.dossierEmpty{display:none}}
+.overview{background:#101519;border:1px solid #28343d;padding:20px 20px 36px}.overviewCaption{display:flex;justify-content:space-between;gap:20px;font:10.5px var(--font-mono);text-transform:uppercase;letter-spacing:.08em;color:#a8adb4;margin-bottom:18px}.overviewSvg{height:140px}.overviewAxis{bottom:20px;left:20px;right:20px}.overviewYear{color:#a8adb4;opacity:1;font:10.5px var(--font-mono)}.trace{cursor:pointer;transition:opacity 180ms,fill 180ms}.trace:hover{opacity:1;fill:#4da3ff!important}
+@media(max-width:959px){.overviewSvg{height:95px}.overviewCaption{font-size:10px}.overview{padding:16px 16px 32px}.overviewAxis{left:16px;right:16px}}
+.page{max-width:none;padding:0 0 96px}.modeBanner,.ledgerHead,.filters,.workspace,.disclaimer{width:min(1200px,calc(100% - 48px));margin-left:auto;margin-right:auto}.modeBanner{margin-top:28px;margin-bottom:0;padding:0 0 18px}.ledgerHead{scroll-margin-top:86px;padding:82px 0 30px;display:grid;grid-template-columns:1fr 1fr;align-items:end;gap:8px 50px;border-bottom:1px solid var(--border);margin-bottom:24px}.ledgerHead>p{grid-column:1/-1;font:10.5px var(--font-mono);text-transform:uppercase;letter-spacing:.12em;color:var(--muted-foreground)}.ledgerHead h2{font-size:clamp(32px,4vw,56px);font-weight:450;letter-spacing:-.055em;line-height:1;margin:0}.ledgerHead>span{font-size:13.5px;line-height:1.6;color:var(--muted-foreground);max-width:360px;justify-self:end}.recordRow{grid-template-rows:auto auto auto;padding-top:15px;padding-bottom:15px}.recordDates{grid-column:1/-1;font:10.5px var(--font-mono);color:var(--muted-foreground);padding-top:9px;letter-spacing:.01em}.filters{margin-top:0}.workspace{margin-top:12px}.disclaimer{display:block;margin-top:32px}.recordList{max-height:760px}
+@media(max-width:959px){.page{padding-top:0}.modeBanner,.ledgerHead,.filters,.workspace,.disclaimer{width:min(100% - 32px,720px)}.ledgerHead{grid-template-columns:1fr;padding:58px 0 24px}.ledgerHead>p{grid-column:auto}.ledgerHead>span{justify-self:start}.modeBanner{margin-top:20px}.recordList{max-height:none}}
+
+/* The visual field resolves into the working register instead of ending at a hard cut. */
+.archiveBridge{height:104px;margin-top:-1px;padding:44px max(24px,5vw) 0;display:flex;align-items:flex-start;gap:18px;background:linear-gradient(to bottom,#0c0d0f 0%,#15191c 38%,var(--background) 100%);color:#a8adb4;font:10.5px var(--font-mono);text-transform:uppercase;letter-spacing:.1em}
+.archiveBridge i{height:1px;flex:1;max-width:210px;margin-top:7px;background:linear-gradient(90deg,#4da3ff88,#a8adb433)}
+@media(min-width:960px){.filters{position:sticky;top:64px;z-index:12;padding:12px 0;background:color-mix(in srgb,var(--background) 94%,transparent);backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}}
+@media(max-width:959px){.archiveBridge{height:84px;padding:34px 20px 0;font-size:10px}.archiveBridge i{max-width:none}.ledgerHead{padding-top:42px}}
+
+/* Sans is the working voice; serif is reserved for the two editorial brand moments. */
+.loadingPage h1{font-family:var(--font-sans),ui-sans-serif,system-ui,sans-serif;font-style:normal;font-weight:500;letter-spacing:-.03em}
+.recordDates,.overviewCaption,.overviewYear,.ledgerHead>p{font-size:10px}
+
+/* Design-audit revision: the dossier column is never blank on desktop — it holds the state summary until a record is chosen. */
+@media(min-width:960px){.dossierPanel{display:block}.dossierEmpty{display:flex;min-height:420px;padding:36px 32px;border:1px solid var(--border);border-top:1px solid var(--border);background:var(--surface)}.dossierEmpty h2{font-size:28px}.dossierEmpty p{font-size:13.5px;max-width:34ch}}
+.stateSummary{display:grid;gap:0;margin:26px 0 0;width:100%;border-top:1px solid var(--border)}
+.stateSummary>div{padding:12px 0;border-bottom:1px solid var(--border)}
+.stateSummary dt{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:500;color:var(--foreground)}
+.stateSummary dt b{margin-left:auto;font:12px var(--font-mono);font-weight:400;color:var(--muted-foreground);font-variant-numeric:tabular-nums}
+.stateSummary dd{margin:4px 0 0 20px;font-size:12.5px;line-height:1.5;color:var(--muted-foreground)}
+.stateSwatch{display:inline-block;width:10px;height:10px;border-radius:2px;flex-shrink:0}
+.stateSummaryFoot{margin-top:14px;font:11px var(--font-mono);color:var(--muted-foreground);line-height:1.6;max-width:none}
+
+/* Usability revision: hover is a wash; selection is a solid left rule, a tinted ground and an explicit "Open in dossier" tag. */
+.recordRow:hover{background:var(--accent-wash)}
+.recordRowSelected,.recordRowSelected:hover{background:color-mix(in srgb,var(--accent) 11%,var(--surface));border-left:3px solid var(--accent);padding-left:9px}
+.recordRowSelected .recordName{color:var(--accent-deep)}
+.recordOpenTag{grid-column:2;grid-row:2/4;align-self:end;justify-self:end;font:10px var(--font-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--accent-deep);white-space:nowrap;padding-bottom:1px}
+.recordRow:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;border-radius:0}
+.ledgerHeading:focus{outline:none}
+.ledgerHeading:focus-visible{outline:2px solid var(--accent);outline-offset:6px}
+
+/* Register foot: the batch count and the "Show more" step. Always visible under the list, outside its scroll region. */
+.ledgerFoot{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 18px;padding:14px 0 4px;border-top:1px solid var(--border)}
+.ledgerRange{margin:0;font:11px var(--font-mono);color:var(--muted-foreground);font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.showMoreBtn{display:inline-flex;align-items:center;gap:12px;min-height:44px;padding:8px 16px;font-size:13px;font-weight:500;color:var(--foreground);background:var(--surface);border:1px solid var(--border-strong);border-radius:3px;transition:border-color 150ms,background 150ms}
+.showMoreBtn:hover{border-color:var(--accent);background:var(--accent-wash)}
+.showMoreBtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.showMoreRemaining{font:10.5px var(--font-mono);color:var(--muted-foreground);letter-spacing:.04em;text-transform:uppercase}
+@media(max-width:959px){.ledgerFoot{flex-direction:column;align-items:stretch}.showMoreBtn{justify-content:space-between;width:100%}}
+
+/* A record chosen outside the current filters still opens; the register says why it is not listed. */
+.dossierNotice{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin:0 0 12px;padding:12px 14px;font-size:12.5px;line-height:1.5;color:var(--foreground);background:var(--accent-wash);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:2px}
+.dossierNotice span{flex:1 1 220px}
+.dossierNotice .clearBtn{color:var(--accent-deep);border-color:var(--accent);min-height:36px}
