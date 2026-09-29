@@ -5,13 +5,13 @@ import { useRef, useState } from "react";
 import { BrandWordmark } from "@/components/brand/Brand";
 import { AuthMenu } from "./AuthMenu";
 import styles from "./Shell.module.css";
-const links = [{href:"/",label:"Atlas"},{href:"/workspace/",label:"Workspace"},{href:"/collections/",label:"Saved"},{href:"/compare/",label:"Compare"},{href:"/delisted/?demo=1",label:"Delisted"}];
+const links = [{href:"/",label:"Atlas"},{href:"/workspace/",label:"Workspace"},{href:"/collections/",label:"Saved"},{href:"/compare/",label:"Compare"},{href:"/delisted/?demo=1",label:"Delisted"},{href:"/pricing/",label:"Pricing"}];
 export function Nav() {
   const pathname = usePathname();
   const dialog = useRef<HTMLDialogElement>(null);
   const [open,setOpen] = useState(false);
   const isHome = pathname === "/";
-  const isImmersive = isHome || pathname.startsWith("/delisted");
+  const isImmersive = isHome || pathname.startsWith("/delisted") || pathname.startsWith("/pricing");
   const close = () => { dialog.current?.close(); setOpen(false); };
   const isCurrent = (href: string) => {
     if (href === "/") return isHome;
