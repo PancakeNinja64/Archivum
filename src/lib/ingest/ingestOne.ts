@@ -47,7 +47,7 @@ export async function ingestOne(
   };
 
   try {
-    // Existing row (by permanent slug first, then by source identity for renames).
+    // Find the existing dataset row, if any, by slug or by platform+sourceId. The slug is derived from the sourceId and is stable even if the source renames the dataset.
     const slug = slugFor(platform, sourceId);
     const { data: existing } = await db.from('datasets')
       .select('id, slug, metadata_hash, license_spdx, coverage_total, status, metadata, end_state')
@@ -72,7 +72,7 @@ export async function ingestOne(
       await closeRun(result.outcome === 'error' ? 'failed' : 'skipped', result.detail, existing?.id);
       return { status: result.outcome === 'error' ? 'failed' : 'skipped', detail: result.detail };
     }
-
+    // At this point we have a valid record and coverage detail to process.
     const record = result.record!;
     const detail = result.coverage!;
     const coverage = computeCoverage(detail);
@@ -170,7 +170,7 @@ export async function ingestOne(
       return { status: 'created', slug: created.slug, datasetId: created.id, coverageTotal: coverage.total };
     }
 
-    // ---------- Known, unchanged ----------
+    //Decide if the metadata hash has changed. If not, we can skip the update and just touch the checked_at timestamp.
     if (existing.metadata_hash === hash) {
       await db.from('datasets').update({
         coverage_checked_at: nowIso,
@@ -181,7 +181,7 @@ export async function ingestOne(
       return { status: 'unchanged', slug: existing.slug, datasetId: existing.id, coverageTotal: coverage.total };
     }
 
-    // ---------- Known, changed: update + version + change rows ----------
+    //If fingerprints differ, we must update the row, append a new version, and record any changes.
     // The slug NEVER changes, even when the source renamed. Identity is ours.
     const { error: upErr } = await db.from('datasets').update(row).eq('id', existing.id);
     if (upErr) {

@@ -46,7 +46,7 @@ export const huggingface: SourceAdapter = {
     if (/^[\w.-]+$/.test(cleaned)) return cleaned; // canonical datasets like 'squad' redirect to owner form
     return null;
   },
-
+  //Obtain metadata for a single dataset from Hugging Face, including coverage and lineage information. Caches results in Redis for 1 hour.
   async ingest(id, { etag }): Promise<IngestFetchResult> {
     const token = serverConfig.hfToken;
     const cacheKey = `huggingface:ingest:${id.toLowerCase()}`;
@@ -65,7 +65,7 @@ export const huggingface: SourceAdapter = {
     }
     
     console.log(`[redis] MISS ${cacheKey}`);
-    // 1. The dataset record itself. ?full=true includes siblings (the file list).
+    //The main request passes the previously stored ETag to the Hugging Face API, which may return a 304 Not Modified response if the dataset has not changed since the last fetch. In that case, we can return the cached result without re-fetching all the data.
     const main = await sourceFetch(`${HF}/api/datasets/${id}?full=true`, { token, etag });
     if (main.notModified) return { outcome: 'not_modified', etag: main.etag };
     if (main.status === 404) return { outcome: 'not_found', detail: `Hugging Face returned 404 for ${id} — renamed, removed, or never existed.` };
@@ -142,7 +142,7 @@ export const huggingface: SourceAdapter = {
 
     const languages = listOf(card.language).map((l) => l.toLowerCase());
     const upstreamIds = listOf(card.source_datasets);
-
+    //What information counts toward change
     const record: NormalisedRecord = {
       platform: 'huggingface',
       sourceId: canonicalId,
@@ -234,7 +234,7 @@ export const huggingface: SourceAdapter = {
       lineage,
       etag: main.etag,
     };
-
+    // Cache the result in Redis for 1 hour, but don't fail the request if caching fails. The cache is a performance optimization, not a correctness requirement.
     try {
       await setCachedJson(
         cacheKey,
